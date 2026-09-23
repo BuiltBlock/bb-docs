@@ -1,7 +1,7 @@
 ---
-title: "Authenticate API Requests to Built Block"
+title: "Built Block API Authentication: Keys and Bearer Tokens"
 sidebarTitle: "Authentication"
-description: "Learn how to generate API keys, pass the Authorization header, and handle 401 and 403 errors in the Built Block API."
+description: "Generate API keys in the Built Block dashboard, attach them as Bearer tokens on every request, and resolve 401 and 403 authentication errors."
 ---
 
 Every request to the Built Block REST API must include a valid API key. Built Block uses **Bearer token authentication** — you generate a key in the dashboard and attach it to each request via the `Authorization` HTTP header. This page explains how to find your keys, format the header correctly, and troubleshoot the most common authentication errors.
