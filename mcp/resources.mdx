@@ -1,0 +1,210 @@
+---
+title: "MCP Resources: Data AI Assistants Can Read from Built Block"
+sidebarTitle: "Resources"
+description: "Reference for every MCP resource the Built Block server exposes, including URI patterns, data shapes, and example JSON payloads."
+---
+
+MCP resources are read-only data contexts that your AI assistant can fetch to ground its responses in live information from your workspace. Unlike tools — which perform actions — resources are used when the AI needs to read current state before answering a question or generating an output. For example, if you ask your AI to "write a summary of all my active projects", it fetches the `builtblock://projects` resource first, then uses that data to craft the response.
+
+<Note>
+  Resources are fetched on demand. The AI requests a resource when it determines that live data would improve its answer. You do not need to explicitly ask it to "fetch" a resource — simply ask your question naturally and the AI handles the data retrieval.
+</Note>
+
+## `builtblock://projects`
+
+Returns a list of all projects in your workspace. The AI uses this resource to answer broad questions about your workspace, generate inventories, or pick a project ID before calling a tool.
+
+**URI:** `builtblock://projects`
+
+**When the AI uses it:** *"How many projects do I have?"*, *"List my projects and their statuses."*
+
+```json Example resource content
+{
+  "resource": "builtblock://projects",
+  "fetched_at": "2025-06-10T14:00:00Z",
+  "data": {
+    "projects": [
+      {
+        "id": "proj_01hx4m2k9f",
+        "name": "Customer Onboarding",
+        "description": "Automates new customer welcome flows",
+        "status": "active",
+        "created_at": "2024-11-03T09:14:22Z"
+      },
+      {
+        "id": "proj_01hx7r5p3c",
+        "name": "Nightly Data Sync",
+        "description": "Syncs records from CRM to data warehouse nightly",
+        "status": "active",
+        "created_at": "2024-12-15T18:00:00Z"
+      },
+      {
+        "id": "proj_01hz9p4r7k",
+        "name": "Invoice Automation",
+        "description": "Handles invoice generation and delivery",
+        "status": "paused",
+        "created_at": "2025-06-10T14:22:05Z"
+      }
+    ],
+    "total": 3
+  }
+}
+```
+
+---
+
+## `builtblock://projects/{id}`
+
+Returns the full detail record for a single project, including its associated integrations, webhooks, and configuration metadata. The AI uses this resource when you ask about a specific project or when it needs to understand a project's structure before suggesting changes.
+
+**URI:** `builtblock://projects/{id}`
+
+Replace `{id}` with a project ID in the format `proj_<ulid>` — for example, `builtblock://projects/proj_01hx4m2k9f`.
+
+**When the AI uses it:** *"What integrations are attached to my Customer Onboarding project?"*, *"Show me the webhook config for project proj_01hx4m2k9f."*
+
+```json Example resource content
+{
+  "resource": "builtblock://projects/proj_01hx4m2k9f",
+  "fetched_at": "2025-06-10T14:05:00Z",
+  "data": {
+    "id": "proj_01hx4m2k9f",
+    "name": "Customer Onboarding",
+    "description": "Automates new customer welcome flows",
+    "status": "active",
+    "integrations": [
+      {
+        "id": "int_01hx5n3m2p",
+        "type": "stripe",
+        "status": "connected"
+      },
+      {
+        "id": "int_01hy2q7s4r",
+        "type": "sendgrid",
+        "status": "connected"
+      }
+    ],
+    "webhooks": [
+      {
+        "id": "wh_01hz3t8q2n",
+        "url": "https://hooks.builtblock.com/wh_01hz3t8q2n",
+        "events": ["customer.created", "customer.updated"],
+        "status": "active"
+      }
+    ],
+    "created_at": "2024-11-03T09:14:22Z",
+    "updated_at": "2025-01-20T11:30:00Z"
+  }
+}
+```
+
+---
+
+## `builtblock://integrations`
+
+Returns all integrations configured across your entire workspace. The AI uses this resource when you ask about third-party service connections, want to audit which integrations are active, or need an integration ID before taking further action.
+
+**URI:** `builtblock://integrations`
+
+**When the AI uses it:** *"Which of my integrations are disconnected?"*, *"Do I have a Stripe integration set up?"*
+
+```json Example resource content
+{
+  "resource": "builtblock://integrations",
+  "fetched_at": "2025-06-10T14:10:00Z",
+  "data": {
+    "integrations": [
+      {
+        "id": "int_01hx5n3m2p",
+        "type": "stripe",
+        "status": "connected",
+        "project_ids": ["proj_01hx4m2k9f"],
+        "connected_at": "2024-11-04T10:00:00Z"
+      },
+      {
+        "id": "int_01hy2q7s4r",
+        "type": "sendgrid",
+        "status": "connected",
+        "project_ids": ["proj_01hx4m2k9f", "proj_01hz9p4r7k"],
+        "connected_at": "2024-11-10T15:30:00Z"
+      },
+      {
+        "id": "int_01hz1k6n8s",
+        "type": "slack",
+        "status": "disconnected",
+        "project_ids": [],
+        "connected_at": null
+      }
+    ],
+    "total": 3
+  }
+}
+```
+
+---
+
+## `builtblock://webhooks`
+
+Returns all webhook configurations across your workspace, including their target URLs, subscribed events, and delivery status. The AI uses this resource to help you audit webhook coverage, identify misconfigured endpoints, or look up a webhook ID before triggering it.
+
+**URI:** `builtblock://webhooks`
+
+**When the AI uses it:** *"Show me all my webhooks and their statuses."*, *"Which webhooks are listening for `invoice.paid` events?"*
+
+```json Example resource content
+{
+  "resource": "builtblock://webhooks",
+  "fetched_at": "2025-06-10T14:15:00Z",
+  "data": {
+    "webhooks": [
+      {
+        "id": "wh_01hz3t8q2n",
+        "project_id": "proj_01hx4m2k9f",
+        "url": "https://hooks.builtblock.com/wh_01hz3t8q2n",
+        "events": ["customer.created", "customer.updated"],
+        "status": "active",
+        "last_delivery": {
+          "id": "del_01hz9r2t5m",
+          "http_status": 200,
+          "delivered_at": "2025-06-10T14:30:11Z"
+        }
+      },
+      {
+        "id": "wh_01hz8m4p6t",
+        "project_id": "proj_01hx7r5p3c",
+        "url": "https://hooks.builtblock.com/wh_01hz8m4p6t",
+        "events": ["sync.completed", "sync.failed"],
+        "status": "active",
+        "last_delivery": {
+          "id": "del_01hz8q3r9v",
+          "http_status": 500,
+          "delivered_at": "2025-06-09T23:00:04Z"
+        }
+      }
+    ],
+    "total": 2
+  }
+}
+```
+
+<Warning>
+  The `last_delivery` field reflects the most recent delivery attempt only. To investigate full delivery history and failure details, open the **Webhooks** tab in your project dashboard.
+</Warning>
+
+---
+
+## Resource Summary
+
+| URI Pattern | Description | Cached? |
+|---|---|---|
+| `builtblock://projects` | All projects in your workspace | No — always live |
+| `builtblock://projects/{id}` | Single project with integrations and webhooks | No — always live |
+| `builtblock://integrations` | All integration configurations | No — always live |
+| `builtblock://webhooks` | All webhook configs and last delivery status | No — always live |
+
+All resources are fetched live from the Built Block API at the time the AI requests them. There is no client-side caching, so the data your AI sees always reflects the current state of your workspace.
+
+## Next Steps
+
+- [MCP Tools](/mcp/tools) — callable actions your AI can take, like creating projects or triggering webhooks
+- [Setup](/mcp/setup) — connect the Built Block MCP server to your AI client

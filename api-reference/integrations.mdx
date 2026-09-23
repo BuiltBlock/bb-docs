@@ -1,0 +1,285 @@
+---
+title: "Integrations API: Connect and Manage External Services"
+sidebarTitle: "Integrations"
+description: "Connect Built Block to external services like Slack, GitHub, and custom HTTP endpoints. Create, inspect, and remove integrations via the REST API."
+---
+
+Integrations link Built Block to external services so your workflows can send messages, trigger actions, and exchange data across platforms. Each integration stores a connection type and a configuration object specific to that type. Use the endpoints below to manage integrations programmatically.
+
+---
+
+## The integration object
+
+Every successful response that returns an integration includes the following fields.
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the integration.
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  Human-readable label you assigned when creating the integration.
+</ResponseField>
+
+<ResponseField name="type" type="string" required>
+  The external service this integration connects to. One of `slack`, `github`, or `http_webhook`.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  Current connectivity state. One of `connected`, `error`, or `disconnected`.
+</ResponseField>
+
+<ResponseField name="config" type="object" required>
+  Type-specific configuration object. See [Configuration fields by type](#configuration-fields-by-type) below.
+</ResponseField>
+
+<ResponseField name="created_at" type="string" required>
+  ISO 8601 timestamp indicating when the integration was created.
+</ResponseField>
+
+---
+
+## Configuration fields by type
+
+The `config` object varies depending on the integration `type`. Expand each section to see the relevant fields.
+
+<Expandable title="slack">
+  <ResponseField name="config.webhook_url" type="string" required>
+    Incoming webhook URL provided by Slack. Built Block posts messages to this URL.
+  </ResponseField>
+  <ResponseField name="config.channel" type="string">
+    Default Slack channel to post messages to (e.g., `#alerts`). Can be overridden per workflow action.
+  </ResponseField>
+</Expandable>
+
+<Expandable title="github">
+  <ResponseField name="config.owner" type="string" required>
+    GitHub organization or user name that owns the target repository.
+  </ResponseField>
+  <ResponseField name="config.repo" type="string" required>
+    Repository name to integrate with (e.g., `my-app`).
+  </ResponseField>
+  <ResponseField name="config.access_token" type="string" required>
+    GitHub personal access token or fine-grained token with the required repository permissions. Stored encrypted at rest.
+  </ResponseField>
+</Expandable>
+
+<Expandable title="http_webhook">
+  <ResponseField name="config.url" type="string" required>
+    The destination URL that Built Block will `POST` event payloads to.
+  </ResponseField>
+  <ResponseField name="config.secret" type="string">
+    Optional shared secret used to sign outgoing payloads. Built Block includes an `X-BuiltBlock-Signature` header so your server can verify authenticity.
+  </ResponseField>
+</Expandable>
+
+---
+
+## List all integrations
+
+Retrieve all integrations configured in your account. Results are returned in reverse chronological order (newest first).
+
+**`GET /integrations`**
+
+### Response fields
+
+<ResponseField name="data" type="array">
+  Array of integration objects.
+</ResponseField>
+
+<ResponseField name="has_more" type="boolean">
+  `true` if additional pages of results are available.
+</ResponseField>
+
+<ResponseField name="next_cursor" type="string">
+  Pagination cursor to pass as `cursor` in your next request. `null` when no further pages exist.
+</ResponseField>
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.builtblock.com/v1/integrations \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "data": [
+    {
+      "id": "int_01hxb4c2d3e4f5g6h7i8j9k0l",
+      "name": "Prod Slack Alerts",
+      "type": "slack",
+      "status": "connected",
+      "config": {
+        "webhook_url": "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXX",
+        "channel": "#alerts"
+      },
+      "created_at": "2024-02-01T08:00:00Z"
+    }
+  ],
+  "has_more": false,
+  "next_cursor": null
+}
+```
+
+---
+
+## Create an integration
+
+Register a new integration by providing a name, type, and the configuration fields required for that type.
+
+**`POST /integrations`**
+
+### Body parameters
+
+<ParamField body="name" type="string" required>
+  A descriptive label for this integration (e.g., `"Prod Slack Alerts"`). Must be between 1 and 255 characters.
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  The external service to connect to. Accepted values: `slack`, `github`, `http_webhook`.
+</ParamField>
+
+<ParamField body="config" type="object" required>
+  Configuration object specific to the chosen `type`. See [Configuration fields by type](#configuration-fields-by-type) above for the required and optional keys for each type.
+</ParamField>
+
+### Response fields
+
+Returns the newly created [integration object](#the-integration-object). Built Block immediately attempts to verify connectivity; the `status` field reflects the result.
+
+<Note>
+  Sensitive values in `config` (such as access tokens and secrets) are encrypted at rest and partially masked in API responses. Store them securely on your end before submission — you cannot retrieve the original value after creation.
+</Note>
+
+<CodeGroup>
+
+```bash cURL — Slack
+curl -X POST https://api.builtblock.com/v1/integrations \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Prod Slack Alerts",
+    "type": "slack",
+    "config": {
+      "webhook_url": "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXX",
+      "channel": "#alerts"
+    }
+  }'
+```
+
+```bash cURL — HTTP Webhook
+curl -X POST https://api.builtblock.com/v1/integrations \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My HTTP Endpoint",
+    "type": "http_webhook",
+    "config": {
+      "url": "https://example.com/builtblock/events",
+      "secret": "whsec_supersecretvalue"
+    }
+  }'
+```
+
+```bash cURL — GitHub
+curl -X POST https://api.builtblock.com/v1/integrations \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My App Repo",
+    "type": "github",
+    "config": {
+      "owner": "my-org",
+      "repo": "my-app",
+      "access_token": "github_pat_XXXXXXXXXXXX"
+    }
+  }'
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "id": "int_01hxb4c2d3e4f5g6h7i8j9k0l",
+  "name": "Prod Slack Alerts",
+  "type": "slack",
+  "status": "connected",
+  "config": {
+    "webhook_url": "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXX",
+    "channel": "#alerts"
+  },
+  "created_at": "2024-02-01T08:00:00Z"
+}
+```
+
+---
+
+## Get an integration
+
+Retrieve the details of a single integration by its ID.
+
+**`GET /integrations/{id}`**
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the integration to retrieve.
+</ParamField>
+
+### Response fields
+
+Returns the [integration object](#the-integration-object) for the given ID.
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.builtblock.com/v1/integrations/int_01hxb4c2d3e4f5g6h7i8j9k0l \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "id": "int_01hxb4c2d3e4f5g6h7i8j9k0l",
+  "name": "Prod Slack Alerts",
+  "type": "slack",
+  "status": "connected",
+  "config": {
+    "webhook_url": "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXX",
+    "channel": "#alerts"
+  },
+  "created_at": "2024-02-01T08:00:00Z"
+}
+```
+
+---
+
+## Delete an integration
+
+Permanently remove an integration. Any workflows that reference this integration will stop executing the associated actions.
+
+**`DELETE /integrations/{id}`**
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the integration to delete.
+</ParamField>
+
+<Warning>
+  Deleting an integration immediately severs the connection to the external service. Workflows that depend on this integration will fail on their next execution. Update those workflows before deleting.
+</Warning>
+
+A successful deletion returns an HTTP `204 No Content` response with no body.
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE https://api.builtblock.com/v1/integrations/int_01hxb4c2d3e4f5g6h7i8j9k0l \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>

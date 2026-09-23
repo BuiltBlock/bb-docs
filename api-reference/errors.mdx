@@ -1,0 +1,170 @@
+---
+title: "API Error Codes and Error Handling in Built Block"
+sidebarTitle: "Errors"
+description: "Understand Built Block API error response structure, HTTP status codes, error code strings, and how to retry failed requests with exponential backoff."
+---
+
+When a request cannot be completed successfully, the Built Block API returns an error response with a consistent JSON structure and an appropriate HTTP status code. Reading the error body — not just the status code — gives you precise information about what went wrong and how to fix it.
+
+## Error Response Structure
+
+Every error response has the same shape: a top-level `error` object containing a machine-readable `code`, a human-readable `message`, and a unique `request_id` you can share with support.
+
+```json Error response body
+{
+  "error": {
+    "code": "not_found",
+    "message": "The requested project was not found.",
+    "request_id": "req_abc123"
+  }
+}
+```
+
+<ResponseField name="error.code" type="string" required>
+  A stable, machine-readable string identifying the error type. Use this field in your error-handling logic rather than parsing the `message`.
+</ResponseField>
+
+<ResponseField name="error.message" type="string" required>
+  A human-readable description of the error. This message may change over time; do not rely on it programmatically.
+</ResponseField>
+
+<ResponseField name="error.request_id" type="string" required>
+  A unique identifier for the request. Include this value when contacting Built Block support to help with diagnosis.
+</ResponseField>
+
+## HTTP Status Codes
+
+The API uses standard HTTP status codes to communicate the category of each error.
+
+| Status | Name                    | When it occurs                                                          |
+|--------|-------------------------|-------------------------------------------------------------------------|
+| `400`  | Bad Request             | The request is malformed or contains invalid parameters.               |
+| `401`  | Unauthorized            | The `Authorization` header is missing or the API key is invalid.        |
+| `403`  | Forbidden               | The API key does not have permission to perform the requested operation. |
+| `404`  | Not Found               | The requested resource does not exist.                                  |
+| `409`  | Conflict                | A resource with the same unique identifier already exists.              |
+| `422`  | Unprocessable Entity    | The request is well-formed but fails server-side validation rules.      |
+| `429`  | Too Many Requests       | You have exceeded the rate limit of 1,000 requests per minute.          |
+| `500`  | Internal Server Error   | An unexpected error occurred on the Built Block servers.                |
+
+## Error Codes
+
+Each HTTP status code maps to one or more `error.code` strings that provide more specific context.
+
+| `error.code`          | HTTP Status | Description                                                             |
+|-----------------------|-------------|-------------------------------------------------------------------------|
+| `invalid_params`      | `400`       | One or more request parameters are missing, malformed, or of the wrong type. |
+| `unauthorized`        | `401`       | No API key was provided, or the key is invalid or revoked.              |
+| `forbidden`           | `403`       | The API key exists but lacks the required scope for this operation.     |
+| `not_found`           | `404`       | The specified resource ID does not match any existing resource.         |
+| `conflict`            | `409`       | A resource with a conflicting unique field (e.g., name or slug) already exists. |
+| `validation_error`    | `422`       | The request body is syntactically valid but violates business logic rules. |
+| `rate_limit_exceeded` | `429`       | The per-minute request quota for this API key has been reached.         |
+| `server_error`        | `500`       | An internal error occurred. Retrying after a short delay is safe.       |
+
+<Note>
+  The `error.message` field on `validation_error` responses often includes details about which field failed validation and why. Log this message during development to speed up debugging.
+</Note>
+
+## Handling Common Errors
+
+### 401 Unauthorized
+
+Check that your `Authorization` header is present and correctly formatted as `Bearer YOUR_API_KEY`. If the key was recently revoked or rotated, update the key in your environment and retry.
+
+### 403 Forbidden
+
+Your key is valid but lacks the required scope. Visit **Settings → API Keys** in the dashboard to check the key's scope. If you need write access, create a new `read-write` key.
+
+### 404 Not Found
+
+Verify that the resource ID in the URL path is correct. IDs are case-sensitive. If the resource was recently deleted, it will not be recoverable via the API.
+
+### 422 Unprocessable Entity
+
+Read the `error.message` value carefully — it typically names the invalid field and explains the constraint. Correct the request body and resubmit.
+
+### 429 Too Many Requests
+
+Slow down your request rate. The `Retry-After` response header tells you how many seconds to wait before making another request. Implement exponential backoff (see below) to handle this gracefully.
+
+## Retrying Requests
+
+Transient errors (`429 Too Many Requests` and `500 Internal Server Error`) are safe to retry. Use **exponential backoff with jitter** to avoid overwhelming the API with simultaneous retries from multiple clients.
+
+The strategy is:
+1. Attempt the request.
+2. If you receive a `429` or `500`, wait before retrying.
+3. Double the wait time on each subsequent failure, up to a maximum delay.
+4. Add random jitter to spread retries across time.
+5. Give up after a configurable number of attempts.
+
+<CodeGroup>
+
+```javascript JavaScript
+async function fetchWithRetry(url, options, maxRetries = 5) {
+  const BASE_DELAY_MS = 500;
+  const MAX_DELAY_MS = 30_000;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch(url, options);
+
+    if (response.ok) {
+      return response.json();
+    }
+
+    const isRetryable = response.status === 429 || response.status === 500;
+
+    if (!isRetryable || attempt === maxRetries) {
+      const error = await response.json();
+      throw new Error(
+        `API error ${response.status}: ${error.error?.message ?? "Unknown error"} (request_id: ${error.error?.request_id})`
+      );
+    }
+
+    // Respect the Retry-After header when present (value is in seconds)
+    const retryAfterHeader = response.headers.get("Retry-After");
+    const retryAfterMs = retryAfterHeader
+      ? parseFloat(retryAfterHeader) * 1000
+      : null;
+
+    // Exponential backoff: 500ms, 1s, 2s, 4s, 8s … capped at 30s
+    const exponentialDelay = Math.min(
+      BASE_DELAY_MS * Math.pow(2, attempt),
+      MAX_DELAY_MS
+    );
+
+    // Add jitter: up to 20% of the calculated delay
+    const jitter = Math.random() * exponentialDelay * 0.2;
+    const delay = retryAfterMs ?? exponentialDelay + jitter;
+
+    console.warn(
+      `Request failed with ${response.status}. Retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries})…`
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
+}
+
+// Usage
+const data = await fetchWithRetry(
+  "https://api.builtblock.com/v1/projects",
+  {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${process.env.BUILTBLOCK_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
+```
+
+</CodeGroup>
+
+<Warning>
+  Do not retry `4xx` errors other than `429`. Errors like `400`, `401`, `403`, `404`, and `422` indicate a problem with your request that will not resolve on its own — retrying them wastes quota and delays surfacing the real issue.
+</Warning>
+
+<Tip>
+  Log the `request_id` from every error response. If you contact Built Block support, providing the `request_id` allows the team to locate the exact failed request in server logs and diagnose the root cause quickly.
+</Tip>

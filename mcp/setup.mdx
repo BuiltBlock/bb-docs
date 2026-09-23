@@ -1,0 +1,180 @@
+---
+title: "Connect Built Block to Your AI Assistant via MCP"
+sidebarTitle: "Setup"
+description: "Step-by-step instructions to configure the Built Block MCP server in Claude Desktop, Cursor, and VS Code using your API key."
+---
+
+Connecting Built Block to your AI assistant takes less than five minutes. You will add a short JSON configuration block to your client's settings file, drop in your API key, and restart the client. After that, your AI assistant can read your workspace data and call Built Block actions directly from the chat interface.
+
+## Prerequisites
+
+Before you start, make sure you have:
+
+- A **Built Block account** with at least one workspace
+- A **Built Block API key** — find yours in the [Settings → API Keys](https://app.builtblock.com/settings/api-keys) page of the dashboard
+- The AI client you want to configure (**Claude Desktop**, **Cursor**, or **VS Code with Copilot**) already installed
+
+<Tip>
+  You can generate a dedicated API key for MCP access under **Settings → API Keys → New Key**. Giving it a descriptive name like `mcp-claude` makes it easy to rotate later without affecting other integrations.
+</Tip>
+
+## Configuration Steps
+
+<Steps>
+  <Step title="Locate your client's MCP config file">
+    Each AI client stores MCP server configuration in a different file. Find the right file for your client in the tabs below.
+  </Step>
+  <Step title="Add the Built Block server block">
+    Copy the JSON snippet for your client and paste it into the config file. If the file already has other MCP servers, add the `"builtblock"` entry inside the existing `"mcpServers"` object.
+  </Step>
+  <Step title="Set your API key">
+    Replace `your_api_key_here` with your actual Built Block API key.
+  </Step>
+  <Step title="Restart your AI client">
+    Save the file and fully restart the client (quit and reopen — a simple reload is not always sufficient). The Built Block tools and resources will appear automatically once the client reconnects.
+  </Step>
+</Steps>
+
+## Client Configuration
+
+<Tabs>
+  <Tab title="Claude Desktop">
+    Open the Claude Desktop configuration file at:
+
+    ```
+    ~/Library/Application Support/Claude/claude_desktop_config.json
+    ```
+
+    <Note>
+      On Windows the path is `%APPDATA%\Claude\claude_desktop_config.json`.
+    </Note>
+
+    Add the `"builtblock"` block inside `"mcpServers"`:
+
+    ```json claude_desktop_config.json
+    {
+      "mcpServers": {
+        "builtblock": {
+          "command": "npx",
+          "args": ["-y", "@builtblock/mcp-server"],
+          "env": {
+            "BUILTBLOCK_API_KEY": "your_api_key_here"
+          }
+        }
+      }
+    }
+    ```
+
+    After saving, quit Claude Desktop completely and reopen it. You should see a hammer icon in the chat input area indicating that MCP tools are available.
+  </Tab>
+
+  <Tab title="Cursor">
+    In the root of your project, create or open the file:
+
+    ```
+    .cursor/mcp.json
+    ```
+
+    Add the following configuration:
+
+    ```json .cursor/mcp.json
+    {
+      "mcpServers": {
+        "builtblock": {
+          "command": "npx",
+          "args": ["-y", "@builtblock/mcp-server"],
+          "env": {
+            "BUILTBLOCK_API_KEY": "your_api_key_here"
+          }
+        }
+      }
+    }
+    ```
+
+    <Tip>
+      To enable Built Block in all your projects without repeating this config, you can also add the block to the global Cursor MCP config at `~/.cursor/mcp.json`.
+    </Tip>
+
+    Restart Cursor after saving. Open the Cursor chat panel and verify that the Built Block tools appear in the tool picker.
+  </Tab>
+
+  <Tab title="VS Code">
+    Open your VS Code `settings.json` file (press `Cmd+Shift+P` / `Ctrl+Shift+P` and run **Preferences: Open User Settings (JSON)**).
+
+    Add the following block at the top level of the JSON object:
+
+    ```json settings.json
+    {
+      "mcp": {
+        "servers": {
+          "builtblock": {
+            "command": "npx",
+            "args": ["-y", "@builtblock/mcp-server"],
+            "env": {
+              "BUILTBLOCK_API_KEY": "your_api_key_here"
+            }
+          }
+        }
+      }
+    }
+    ```
+
+    <Note>
+      MCP support in VS Code requires the **GitHub Copilot** extension (v1.250 or later). Make sure it is installed and up to date.
+    </Note>
+
+    Save `settings.json` and reload the VS Code window (**Developer: Reload Window** from the command palette). The Built Block server will initialise automatically when Copilot Chat opens.
+  </Tab>
+
+  <Tab title="Continue.dev">
+    Open the Continue configuration file at:
+
+    ```
+    ~/.continue/config.json
+    ```
+
+    Add a new entry to the `"mcpServers"` array:
+
+    ```json ~/.continue/config.json
+    {
+      "mcpServers": [
+        {
+          "name": "builtblock",
+          "command": "npx",
+          "args": ["-y", "@builtblock/mcp-server"],
+          "env": {
+            "BUILTBLOCK_API_KEY": "your_api_key_here"
+          }
+        }
+      ]
+    }
+    ```
+
+    Restart VS Code or your editor after saving the file.
+  </Tab>
+</Tabs>
+
+## Verifying the Connection
+
+Once your client restarts, ask your AI assistant a quick test question to confirm everything is working:
+
+```
+List all my Built Block projects.
+```
+
+The AI should call the `list_projects` tool and return your project names. If it responds with an error or says it cannot reach Built Block, double-check that:
+
+1. Your API key is correct and has not been revoked
+2. The JSON in your config file is valid (no trailing commas or missing braces)
+3. You fully restarted the client after saving
+
+<Warning>
+  If your config file contains a JSON syntax error, the MCP client will silently ignore the entire file and no servers will load. Use a JSON validator to check the file if tools do not appear after restarting.
+</Warning>
+
+## Next Steps
+
+With your AI assistant connected, explore what it can do:
+
+- [MCP Tools](/mcp/tools) — learn every action the AI can call in your workspace
+- [MCP Resources](/mcp/resources) — understand what live data the AI can read

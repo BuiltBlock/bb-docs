@@ -1,0 +1,52 @@
+---
+title: "Built Block MCP: AI Assistant Integration Overview"
+sidebarTitle: "Overview"
+description: "Connect AI assistants like Claude, Cursor, and VS Code Copilot to your Built Block workspace using the Model Context Protocol (MCP)."
+---
+
+The Built Block MCP server brings your workspace data and workflow automation directly into the AI tools you already use. Instead of switching between your AI assistant and the Built Block dashboard, you can ask your AI to list projects, trigger webhooks, inspect integrations, and more — all from within a single conversation.
+
+## What is MCP?
+
+The Model Context Protocol (MCP) is an open standard that gives AI assistants a structured way to connect to external data sources and tools. Think of it as a universal plugin layer: once you point an MCP-compatible client at an MCP server, the AI can read data from that server and call actions on it, right inside the chat interface. Built Block ships a fully hosted MCP server at `https://mcp.builtblock.com` so you do not need to run any infrastructure yourself.
+
+## What the Built Block MCP Server Enables
+
+With the Built Block MCP server connected to your AI assistant, you can:
+
+- **Query your workspace** — ask the AI to list all projects or pull up the details of a specific integration without leaving your editor
+- **Automate from natural language** — instruct the AI to create a project or fire a webhook as part of a larger task
+- **Reduce context-switching** — keep your entire workflow automation layer accessible inside Claude, Cursor, or VS Code
+- **Build faster** — let the AI read live resource data from your workspace to generate accurate code, configs, or documentation
+
+<Note>
+  The Built Block MCP server uses your API key for authentication. Treat it with the same care as any other secret — never commit it to version control.
+</Note>
+
+## Supported AI Clients
+
+Built Block's MCP server works with any MCP-compatible client. The following clients are tested and supported:
+
+| Client | Notes |
+|---|---|
+| **Claude Desktop** | Full tool and resource support via `claude_desktop_config.json` |
+| **Cursor** | Configure via `.cursor/mcp.json` in your project root |
+| **VS Code with Copilot** | Add the MCP server block to your VS Code `settings.json` |
+| **Continue.dev** | Add as a custom MCP provider in `~/.continue/config.json` |
+
+## Explore the Integration
+
+<CardGroup cols={2}>
+  <Card title="Setup" icon="plug" href="/mcp/setup">
+    Configure the Built Block MCP server in Claude Desktop, Cursor, or VS Code in under five minutes.
+  </Card>
+  <Card title="Tools" icon="wrench" href="/mcp/tools">
+    Browse every action your AI assistant can call, including creating projects and triggering webhooks.
+  </Card>
+  <Card title="Resources" icon="database" href="/mcp/resources">
+    See which live data resources the AI can read from your workspace, from projects to webhook logs.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference">
+    Explore the underlying REST API that powers the Built Block platform and MCP server.
+  </Card>
+</CardGroup>

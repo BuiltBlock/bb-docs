@@ -1,0 +1,127 @@
+---
+title: "Manage Your Built Block Account and Workspace Settings"
+sidebarTitle: "Settings"
+description: "Configure API keys, team members, notification preferences, and billing for your Built Block account and workspace."
+---
+
+The **Settings** section is where you control everything that applies to your workspace as a whole rather than to a specific project. From here you generate and rotate API keys, invite teammates, assign roles, set notification preferences, and manage your billing subscription. Changes you make in Settings affect the entire workspace, so most of these actions are restricted to users with the Owner or Admin role.
+
+## API keys
+
+API keys authenticate every request your applications and scripts make to the Built Block REST API. Each key is tied to your workspace and inherits the permissions of the user who created it.
+
+### Generate a new API key
+
+<Steps>
+  <Step title="Open Settings → API Keys">
+    Click **Settings** in the left-hand sidebar, then select the **API Keys** tab.
+  </Step>
+  <Step title="Click Generate New Key">
+    Select the **Generate New Key** button. A dialog appears asking for a key name and an optional expiry date.
+  </Step>
+  <Step title="Name the key">
+    Enter a descriptive name that identifies where this key will be used — for example, `ci-pipeline-prod` or `local-dev-laptop`. A good name makes it easy to revoke the right key if it is ever compromised.
+  </Step>
+  <Step title="Set an expiry date (optional)">
+    Choose an expiry date if you want the key to stop working automatically. Leave this blank for a non-expiring key. For production pipelines, consider setting a 90- or 180-day expiry and rotating keys on a schedule.
+  </Step>
+  <Step title="Copy and store the key">
+    Click **Generate**. The full API key is displayed **once only** — copy it immediately and store it in a secrets manager or your CI/CD platform's secret store. Built Block never shows the full key again after you close this dialog.
+  </Step>
+</Steps>
+
+<Warning>
+  Treat your API key like a password. Never commit it to source control, include it in client-side code, or share it in plain text over chat or email. If you suspect a key has been exposed, revoke it immediately and generate a replacement.
+</Warning>
+
+### Rotate an API key
+
+To rotate a key, generate a new key with the same name, update your application's secret store with the new value, and then revoke the old key. This zero-downtime rotation ensures your workflows continue running while you migrate to the new credential.
+
+### Revoke an API key
+
+Open **Settings → API Keys**, locate the key you want to remove, and click the **Revoke** button (trash icon) next to it. Confirm the action in the dialog. Revocation is immediate — any request using that key will return a `401 Unauthorized` response.
+
+## Team members
+
+Invite colleagues to your workspace so they can collaborate on projects and integrations. Each team member is assigned a role that controls what they can see and do.
+
+### Roles
+
+| Role | Description |
+|---|---|
+| **Owner** | Full access to all workspace resources, settings, and billing. Can transfer ownership. There is exactly one Owner per workspace. |
+| **Admin** | Can manage projects, integrations, team members, and API keys. Cannot access billing or transfer ownership. |
+| **Member** | Can view and edit projects and integrations they have been granted access to. Cannot manage team members, API keys, or billing. |
+
+### Invite a team member
+
+1. Go to **Settings → Team Members** and click **Invite Member**.
+2. Enter the invitee's email address and select their role.
+3. Click **Send Invitation**. Built Block sends an email with a join link that expires after 48 hours.
+
+Once the invitee accepts, they appear in the team members list with the assigned role.
+
+<Note>
+  Pending invitations are listed separately under the **Pending** tab. You can resend or cancel a pending invitation at any time before it is accepted.
+</Note>
+
+### Change a member's role
+
+Click the **⋯ More** menu next to any team member and select **Change Role**. Choose the new role from the dropdown and confirm. Role changes take effect immediately.
+
+### Remove a team member
+
+Click **⋯ More** next to the member and select **Remove from Workspace**. Removing a member revokes their access immediately. Any API keys they created remain active until you revoke them separately under the **API Keys** tab.
+
+<Warning>
+  Removing a team member does not automatically revoke their API keys. Review the API Keys list after removing a member to ensure no orphaned keys remain active.
+</Warning>
+
+## Notifications
+
+Configure how Built Block alerts you and your team about important workflow and platform events.
+
+Navigate to **Settings → Notifications** to manage your preferences. Notifications can be delivered by **email**, **Slack** (if you have a Slack integration configured), or **in-app** alerts in the dashboard.
+
+| Event | Default |
+|---|---|
+| Workflow run failed | Email + In-app |
+| Workflow run succeeded | Off |
+| Integration disconnected | Email + In-app |
+| API key about to expire | Email |
+| Team member joined | In-app |
+| Billing payment failed | Email |
+
+Toggle each event on or off for each delivery channel. Changes apply to your personal notification preferences only — each team member manages their own settings.
+
+<Tip>
+  Enable **Workflow run failed** notifications on Slack as well as email so your team gets real-time alerts in the channel where they are already working.
+</Tip>
+
+## Billing
+
+Review and manage your Built Block subscription under **Settings → Billing**.
+
+The Billing page shows:
+
+- Your **current plan** and the features it includes.
+- Your **usage metrics** for the current billing period: workflow runs, active integrations, and data storage.
+- Your **payment method** and the next invoice date.
+- A link to **invoices and receipts** for all past payments.
+
+### Upgrade or downgrade your plan
+
+Click **Change Plan** to view available tiers. Upgrades take effect immediately and are prorated for the remainder of the billing period. Downgrades take effect at the start of the next billing period.
+
+### Update your payment method
+
+Click **Update Payment Method**, enter your new card details, and click **Save**. The new card is charged on the next billing date.
+
+<Note>
+  Only the workspace **Owner** can view and manage billing settings. Admins and Members do not have access to the Billing tab.
+</Note>
+
+### Cancel your subscription
+
+To cancel, click **Cancel Subscription** at the bottom of the Billing page. Your workspace remains active until the end of the current paid period, after which it moves to the free tier. Workflows that exceed free-tier limits will be paused automatically.

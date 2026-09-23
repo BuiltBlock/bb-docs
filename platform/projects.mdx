@@ -1,0 +1,137 @@
+---
+title: "Create and Manage Projects in Built Block"
+sidebarTitle: "Projects"
+description: "Learn how to create, organize, archive, and delete Built Block projects — the containers that hold your workflows and resources."
+---
+
+A **project** is the fundamental unit of organization in Built Block. Think of it as a container that groups related workflows, triggers, and resources together. Every workflow you build lives inside a project, and every API call you make references a project by its unique ID. Keeping projects well-organized from the start makes it much easier to manage permissions, monitor usage, and clean up when a workflow reaches the end of its life.
+
+## Project fields
+
+Each project has the following attributes:
+
+| Field | Description |
+|---|---|
+| **Name** | A human-readable label for the project. Must be unique within your workspace. |
+| **Description** | An optional free-text summary of the project's purpose. |
+| **Status** | Either `active` (default) or `archived`. Archived projects are read-only. |
+| **Project ID** | A system-generated identifier used in all API requests that reference this project. |
+| **Created at** | Timestamp of when the project was created. |
+
+<Note>
+  The **Project ID** is automatically assigned when you create a project. Copy it from the project detail page or the API response — you will need it when making REST API calls or configuring MCP integrations.
+</Note>
+
+## Create a project
+
+<Steps>
+  <Step title="Open the Projects section">
+    In the left-hand sidebar, click **Projects**. The projects list page shows all active projects in your workspace.
+  </Step>
+  <Step title="Click New Project">
+    Select the **New Project** button in the top-right corner of the projects list.
+  </Step>
+  <Step title="Fill in the project details">
+    Enter a **Name** for your project. Optionally add a **Description** to help your teammates understand what this project is for.
+
+    <Tip>
+      Use a clear, descriptive name that reflects the project's function — for example, `customer-onboarding-workflows` or `slack-alert-pipeline` — rather than a generic name like `project-1`.
+    </Tip>
+  </Step>
+  <Step title="Save the project">
+    Click **Create Project**. Built Block generates a unique Project ID and redirects you to the new project's detail page.
+  </Step>
+</Steps>
+
+## Create a project via the API
+
+You can also create projects programmatically using the REST API.
+
+<CodeGroup>
+```bash cURL
+curl --request POST \
+  --url https://api.builtblock.io/v1/projects \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "name": "customer-onboarding-workflows",
+    "description": "Workflows that handle new customer onboarding steps."
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "https://api.builtblock.io/v1/projects",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={
+        "name": "customer-onboarding-workflows",
+        "description": "Workflows that handle new customer onboarding steps.",
+    },
+)
+project = response.json()
+print(project["id"])  # Your new Project ID
+```
+
+```typescript TypeScript
+const response = await fetch("https://api.builtblock.io/v1/projects", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    name: "customer-onboarding-workflows",
+    description: "Workflows that handle new customer onboarding steps.",
+  }),
+});
+
+const project = await response.json();
+console.log(project.id); // Your new Project ID
+```
+</CodeGroup>
+
+## Manage existing projects
+
+### Edit a project
+
+Open any project from the projects list and click the **Edit** button (pencil icon) in the top-right corner of the detail page. You can update the project's name and description at any time. The Project ID is immutable and cannot be changed after creation.
+
+### Archive a project
+
+Archiving a project makes it read-only — all of its workflows stop running, and no new resources can be added. The project and its data are preserved so you can review history or restore the project later.
+
+To archive a project:
+
+1. Open the project from the projects list.
+2. Click the **⋯ More** menu in the top-right corner.
+3. Select **Archive Project**.
+4. Confirm the action in the dialog that appears.
+
+To restore an archived project, open it from the **Archived** tab on the projects list page and click **Restore Project**.
+
+<Note>
+  Archived projects do not count against any active-project limits on your billing plan, but their stored data still counts toward your storage quota.
+</Note>
+
+### Delete a project
+
+Deleting a project is **permanent and irreversible**. All workflows, run history, and associated resources are removed immediately.
+
+<Warning>
+  You cannot recover a deleted project or its data. Archive the project first if there is any chance you will need it again.
+</Warning>
+
+To delete a project:
+
+1. Open the project and click the **⋯ More** menu.
+2. Select **Delete Project**.
+3. Type the project name in the confirmation dialog to confirm.
+4. Click **Delete permanently**.
+
+## Organize projects
+
+Use the search bar at the top of the projects list to filter by name. You can also sort projects by creation date or alphabetically using the **Sort** dropdown.
+
+For larger teams with many projects, consider adopting a naming convention — for example, prefixing project names with a team identifier (`payments-`, `infra-`, `growth-`) — so that teammates can quickly find relevant projects.

@@ -1,0 +1,167 @@
+---
+title: "MCP Tools: Actions AI Assistants Can Take in Built Block"
+sidebarTitle: "Tools"
+description: "Full reference for every MCP tool the Built Block server exposes, including parameters, types, and example prompts for each action."
+---
+
+MCP tools are callable actions that your AI assistant can invoke on your behalf. When you ask your AI to "create a project called Onboarding" or "trigger the nightly sync webhook", it translates your natural-language request into a structured tool call, sends it to the Built Block MCP server, and returns the result — all without you leaving the chat interface. This page documents every tool the Built Block MCP server exposes.
+
+<Note>
+  Tools are write-capable operations. The AI will execute them as soon as it decides a tool call is the right response. If you want the AI to confirm before taking action, instruct it explicitly — for example: *"Tell me what you would do before doing it."*
+</Note>
+
+## `list_projects`
+
+Returns a list of all projects in your Built Block workspace, including their IDs, names, descriptions, and creation timestamps.
+
+**Example prompt:** *"Show me all my Built Block projects."*
+
+This tool takes no parameters.
+
+```json Example response
+{
+  "projects": [
+    {
+      "id": "proj_01hx4m2k9f",
+      "name": "Customer Onboarding",
+      "description": "Automates new customer welcome flows",
+      "created_at": "2024-11-03T09:14:22Z"
+    },
+    {
+      "id": "proj_01hx7r5p3c",
+      "name": "Nightly Data Sync",
+      "description": "",
+      "created_at": "2024-12-15T18:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## `get_project`
+
+Fetches the full details of a single project by its ID, including its integrations, webhook configurations, and status.
+
+**Example prompt:** *"Get details for project proj_01hx4m2k9f."*
+
+<ParamField path="project_id" type="string" required>
+  The unique identifier of the project to retrieve. Project IDs follow the format `proj_<ulid>` and are returned by `list_projects`.
+</ParamField>
+
+```json Example response
+{
+  "id": "proj_01hx4m2k9f",
+  "name": "Customer Onboarding",
+  "description": "Automates new customer welcome flows",
+  "status": "active",
+  "integrations": ["stripe", "sendgrid"],
+  "webhooks": ["wh_01hz3t8q2n"],
+  "created_at": "2024-11-03T09:14:22Z",
+  "updated_at": "2025-01-20T11:30:00Z"
+}
+```
+
+---
+
+## `create_project`
+
+Creates a new project in your Built Block workspace and returns the newly created project object.
+
+**Example prompt:** *"Create a project called 'Invoice Automation' with the description 'Handles invoice generation and delivery'."*
+
+<ParamField path="name" type="string" required>
+  The display name for the new project. Must be between 1 and 120 characters. Project names do not need to be unique, but using distinct names makes it easier to manage your workspace.
+</ParamField>
+
+<ParamField path="description" type="string">
+  An optional plain-text description of the project's purpose. Supports up to 500 characters. Providing a description helps the AI give more accurate answers when you ask about your projects later.
+</ParamField>
+
+```json Example response
+{
+  "id": "proj_01hz9p4r7k",
+  "name": "Invoice Automation",
+  "description": "Handles invoice generation and delivery",
+  "status": "active",
+  "created_at": "2025-06-10T14:22:05Z"
+}
+```
+
+---
+
+## `list_integrations`
+
+Returns all integrations configured in your Built Block workspace, including their type, status, and the projects they are associated with.
+
+**Example prompt:** *"What integrations do I have set up in Built Block?"*
+
+This tool takes no parameters.
+
+```json Example response
+{
+  "integrations": [
+    {
+      "id": "int_01hx5n3m2p",
+      "type": "stripe",
+      "status": "connected",
+      "project_ids": ["proj_01hx4m2k9f"]
+    },
+    {
+      "id": "int_01hy2q7s4r",
+      "type": "sendgrid",
+      "status": "connected",
+      "project_ids": ["proj_01hx4m2k9f", "proj_01hz9p4r7k"]
+    }
+  ]
+}
+```
+
+---
+
+## `trigger_webhook`
+
+Fires a specific webhook by ID, optionally sending a custom JSON payload. Use this tool to manually kick off a workflow, test a webhook endpoint, or chain a trigger from within an AI-assisted task.
+
+**Example prompt:** *"Trigger webhook wh_01hz3t8q2n with the payload `{ \"event\": \"test\" }`."*
+
+<Warning>
+  Triggering a webhook fires the associated workflow immediately. Make sure you are pointing at the correct webhook ID before instructing the AI to proceed, especially in production workspaces.
+</Warning>
+
+<ParamField path="webhook_id" type="string" required>
+  The unique identifier of the webhook to trigger. Webhook IDs follow the format `wh_<ulid>`. You can find them on the **Webhooks** page of your project dashboard or by asking the AI to call `get_project`.
+</ParamField>
+
+<ParamField path="payload" type="object">
+  An optional JSON object to send as the webhook request body. If omitted, the server sends an empty body. Use this to pass dynamic values — such as a customer ID or event type — to the workflow being triggered.
+</ParamField>
+
+```json Example response
+{
+  "delivery_id": "del_01hz9r2t5m",
+  "webhook_id": "wh_01hz3t8q2n",
+  "status": "delivered",
+  "http_status": 200,
+  "triggered_at": "2025-06-10T14:30:11Z"
+}
+```
+
+---
+
+## Tool Availability by Client
+
+All five tools are available in every supported MCP client. The table below summarises the tool set at a glance.
+
+| Tool | Description | Parameters |
+|---|---|---|
+| `list_projects` | List all workspace projects | None |
+| `get_project` | Fetch a single project by ID | `project_id` (required) |
+| `create_project` | Create a new project | `name` (required), `description` (optional) |
+| `list_integrations` | List all configured integrations | None |
+| `trigger_webhook` | Fire a webhook by ID | `webhook_id` (required), `payload` (optional) |
+
+## Next Steps
+
+- [MCP Resources](/mcp/resources) — read-only data contexts the AI can use for richer answers
+- [Setup](/mcp/setup) — add the Built Block MCP server to your AI client if you haven't already

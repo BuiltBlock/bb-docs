@@ -1,0 +1,128 @@
+---
+title: "Connect Your First Service to Built Block"
+sidebarTitle: "First Integration"
+description: "Follow this step-by-step guide to connect an external service — Slack, GitHub, or a custom HTTP webhook — to your Built Block account in minutes."
+---
+
+Integrations are the backbone of Built Block workflows. Once you connect an external service, you can trigger automations, push data between systems, and build powerful multi-step pipelines — all without writing boilerplate glue code. This guide walks you through connecting your first integration from start to finish.
+
+<Note>
+  Built Block currently supports the following integration types: **Slack**, **GitHub**, and **custom HTTP webhooks**. More integrations — including Jira, Linear, and Stripe — are on the roadmap. Vote for your most-wanted integrations in the [community portal](https://community.builtblock.com).
+</Note>
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- A Built Block account (free tier or higher)
+- Access to the external service you want to connect (for example, admin permissions in your Slack workspace or a GitHub repository)
+- At least one project created in your Built Block dashboard
+
+---
+
+<Steps>
+
+  <Step title="Open Integrations in the dashboard">
+    Sign in to the [Built Block dashboard](https://app.builtblock.com) and navigate to **Integrations** in the left sidebar. This panel lists every integration you have configured, along with its current connection status.
+
+    If this is your first visit, the list is empty — that is expected. Click **Add Integration** in the top-right corner to open the integration catalogue.
+  </Step>
+
+  <Step title="Choose an integration type">
+    Browse or search the catalogue for the service you want to connect. Select its tile to open the configuration panel. Built Block groups integrations into three categories:
+
+    | Category | Examples |
+    |---|---|
+    | **Messaging** | Slack |
+    | **Version Control** | GitHub |
+    | **Custom** | HTTP Webhook (any service) |
+
+    For OAuth-based integrations such as Slack and GitHub, you are redirected to the provider's authorization page. Approve the requested permissions and you are returned to Built Block automatically.
+
+    For custom HTTP webhooks, you stay on the Built Block configuration screen — proceed to the next step.
+  </Step>
+
+  <Step title="Enter credentials or configure your webhook URL">
+    Depending on the integration type, Built Block asks for different information.
+
+    <CodeGroup>
+
+    ```text Slack (OAuth)
+    # Nothing to enter manually.
+    # Click "Connect to Slack", choose your workspace,
+    # and approve the requested scopes. Built Block stores
+    # the OAuth token securely on your behalf.
+    ```
+
+    ```text GitHub (OAuth)
+    # Click "Connect to GitHub".
+    # Choose whether to grant access to all repositories
+    # or selected repositories, then click "Install & Authorize".
+    ```
+
+    ```text Custom HTTP Webhook
+    Name:         My Webhook
+    Endpoint URL: https://your-server.example.com/hooks/builtblock
+    Secret:       (auto-generated, copy and store this safely)
+    Events:       ✅ project.created  ✅ project.updated  ☐ project.deleted
+    ```
+
+    </CodeGroup>
+
+    <Warning>
+      Your webhook secret is shown **once** at creation time. Copy it to a secure secrets manager (for example, AWS Secrets Manager, 1Password, or your CI/CD environment variables) before navigating away. If you lose it, you must rotate the secret and update your receiving server.
+    </Warning>
+
+    Fill in the required fields and click **Save Integration**.
+  </Step>
+
+  <Step title="Test the connection">
+    After saving, Built Block displays a **Test Connection** button on the integration detail page. Click it to send a live test request to the external service.
+
+    - For **Slack**, Built Block posts a brief confirmation message to the default channel you selected during authorization.
+    - For **GitHub**, Built Block verifies repository access and lists the first five repositories it can see.
+    - For **custom HTTP webhooks**, Built Block sends a `POST` request with a `ping` event payload to your endpoint URL.
+
+    A green **Connection successful** badge confirms everything is working. If you see an error, expand the **Diagnostics** panel for the raw response details and suggested fixes.
+
+    <Tip>
+      For custom webhook endpoints still under development, use a tool like [Webhook.site](https://webhook.site) or [ngrok](https://ngrok.com) as a temporary public URL so you can inspect incoming payloads before wiring up your real server.
+    </Tip>
+  </Step>
+
+  <Step title="Use the integration in a project">
+    With the integration connected and verified, you can reference it in any Built Block project workflow. Open your project, navigate to the **Workflow** tab, and add a new step. When the step picker opens, select **Integrations** from the left panel — your new integration appears in the list.
+
+    For example, to send a Slack message whenever a workflow completes:
+
+    1. Add a **Slack — Send Message** step at the end of your workflow.
+    2. Select the connected Slack workspace from the dropdown.
+    3. Choose a channel and write your message body (you can reference workflow output variables using `{{variable_name}}`).
+    4. Click **Save Workflow** and run a test execution to confirm the message arrives.
+
+    You can attach the same integration to multiple workflows and multiple projects — there is no need to reconnect it each time.
+  </Step>
+
+</Steps>
+
+---
+
+## Manage existing integrations
+
+To review, rotate secrets, or remove an integration, return to **Integrations** in the sidebar and click the integration's name. From the detail page you can:
+
+- **Rotate the webhook secret** — invalidates the old secret immediately and generates a new one.
+- **Pause the integration** — temporarily stops Built Block from sending events without removing the configuration.
+- **Delete the integration** — permanently removes the integration and disconnects it from all workflows that reference it.
+
+<Warning>
+  Deleting an integration is irreversible. Any workflow step that references the deleted integration will fail at runtime. Update or remove those steps before deleting.
+</Warning>
+
+---
+
+## What's next?
+
+<Card title="Set Up Webhooks" icon="webhook" href="/guides/webhooks">
+  Learn how to receive real-time event notifications from Built Block on your own server, verify payload signatures, and handle each event type reliably.
+</Card>

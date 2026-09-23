@@ -1,0 +1,161 @@
+---
+title: "Use AI Assistants to Manage Built Block via MCP"
+sidebarTitle: "AI Assistants"
+description: "Connect Claude, Cursor, or any MCP-compatible AI assistant to Built Block and manage projects, workflows, and integrations using plain-language prompts."
+---
+
+Built Block's Model Context Protocol (MCP) server exposes your account's data and actions directly to AI coding assistants. Instead of switching between your editor and the dashboard, you can ask your assistant to list active projects, spin up a new workflow, or check which integrations are connected — and get answers grounded in your live Built Block data. This guide shows you how to get the most out of that integration.
+
+## Prerequisites
+
+Before you start, complete the MCP setup for your preferred assistant. The setup guide walks you through installing the Built Block MCP server and configuring your API key.
+
+<Card title="Set Up MCP" icon="plug" href="/mcp/setup">
+  Install the Built Block MCP server and connect it to Claude, Cursor, or another MCP-compatible assistant.
+</Card>
+
+Once setup is complete, return here to learn which prompts work best and what to expect from each interaction.
+
+---
+
+## What you can ask your assistant to do
+
+The Built Block MCP server gives your AI assistant access to your account through a set of **tools** (actions that read or write data) and **resources** (contextual data like project lists or integration status). Here is a quick overview of common tasks and the prompts that trigger them.
+
+### List your projects
+
+Ask your assistant to fetch a live list of every project in your account:
+
+> "List all my active Built Block projects."
+
+> "Show me my projects and their current status."
+
+Your assistant queries the Built Block API and returns a formatted summary — including project IDs, names, creation dates, and workflow counts — directly in the chat pane. No copying API keys into a terminal required.
+
+### Create a new project
+
+> "Create a new Built Block project called Marketing Automation."
+
+> "Set up a project named 'Q4 Reporting' in Built Block."
+
+The assistant calls the `projects.create` MCP tool, confirms the action with you if your assistant is configured to do so, and then shows you the newly created project's ID and dashboard link.
+
+### Check integration status
+
+> "What integrations do I have connected in Built Block?"
+
+> "Is my GitHub integration still active?"
+
+The assistant retrieves your integration list and presents the name, type, and connection status of each one. If an integration is disconnected or in an error state, the assistant highlights it so you can act quickly.
+
+### Inspect a specific workflow
+
+> "Show me the steps in my 'New Lead Notification' workflow."
+
+> "What triggers the 'Daily Report' workflow?"
+
+The assistant fetches the workflow definition and describes each step, trigger condition, and connected integration in plain English — useful for quick audits without opening the dashboard.
+
+---
+
+## How AI responses map to real Built Block data
+
+When you ask your assistant a question, here is what happens under the hood:
+
+1. The assistant identifies the right MCP tool or resource to call.
+2. The MCP server sends an authenticated request to `https://api.builtblock.com` using your configured API key.
+3. Built Block returns the live data.
+4. The assistant formats and presents that data in its response.
+
+This means every answer your assistant gives you reflects the actual current state of your account — not a cached snapshot or a hallucination. If you create a project via the dashboard and then ask your assistant about it thirty seconds later, it will appear in the list.
+
+<Note>
+  Response accuracy depends on your assistant having a valid, non-expired Built Block API key configured in the MCP server. If your assistant starts returning errors or stale data, check your API key in **Settings → API Keys** in the dashboard.
+</Note>
+
+---
+
+## What AI assistants can and cannot do
+
+Understanding the boundaries of MCP access helps you use this integration safely and efficiently.
+
+### What assistants **can** do
+
+- **Read operations** — list projects, workflows, integrations, webhook endpoints, and activity logs
+- **Write operations** — create and update projects and workflows, connect or disconnect integrations, register webhook endpoints
+- **Trigger test executions** — run a workflow in test mode and return the output
+
+### What assistants **cannot** do
+
+- Access resources outside your account scope (enforced by your API key's permissions)
+- Approve OAuth flows on your behalf — actions that require browser-based authorization (for example, connecting a new Slack workspace) must be completed in the dashboard
+- Modify billing, subscription, or team-member settings — these endpoints are excluded from MCP tool exposure by design
+- Perform destructive bulk operations (for example, deleting all projects at once) without explicit per-resource confirmation
+
+<Warning>
+  MCP write operations use your API key and take effect immediately. Before telling your assistant to delete or modify resources, double-check what you are asking — there is no undo for deleted projects or workflows.
+</Warning>
+
+---
+
+## Example conversation
+
+The following shows a realistic back-and-forth session in Claude using the Built Block MCP server:
+
+```text Example Claude session
+You:        List all my active projects.
+
+Claude:     You have 3 active projects in Built Block:
+
+            1. Marketing Automation (proj_abc123) — 4 workflows, created Jan 10 2024
+            2. Daily Reports (proj_def456) — 2 workflows, created Dec 3 2023
+            3. Lead Sync (proj_ghi789) — 1 workflow, created Jan 14 2024
+
+You:        Create a new project called "Customer Onboarding".
+
+Claude:     I'll create that project now. Shall I go ahead?
+
+You:        Yes.
+
+Claude:     Done! Your new project "Customer Onboarding" has been created.
+            Project ID: proj_jkl012
+            View it in the dashboard: https://app.builtblock.com/projects/proj_jkl012
+
+You:        What integrations do I have connected?
+
+Claude:     You have 2 integrations connected:
+
+            ✅ Slack — connected (Marketing Automation, Lead Sync)
+            ✅ GitHub — connected (Daily Reports)
+
+            No integrations are in an error state.
+```
+
+---
+
+## Tips for effective prompts
+
+<Tip>
+  Be specific about the resource you mean. "Update my project" is ambiguous — "Update the description of project proj_abc123 to 'Handles top-of-funnel automation'" gives the assistant exactly what it needs.
+</Tip>
+
+<Tip>
+  Ask for confirmation before destructive changes. In Claude, you can say "Ask me to confirm before making any changes" at the start of a session. In Cursor, enable the **Ask before running tools** setting in MCP preferences.
+</Tip>
+
+<Tip>
+  Chain requests naturally. "List my workflows, then show me the steps in the one with the most recent activity" works as a single prompt — the assistant resolves it as two sequential tool calls.
+</Tip>
+
+---
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="MCP Tools" icon="wrench" href="/mcp/tools">
+    Browse the full list of MCP tools available in Built Block — including input schemas, output shapes, and required permission scopes.
+  </Card>
+  <Card title="MCP Resources" icon="database" href="/mcp/resources">
+    Explore the MCP resources your assistant can read, including project lists, workflow definitions, and integration status objects.
+  </Card>
+</CardGroup>

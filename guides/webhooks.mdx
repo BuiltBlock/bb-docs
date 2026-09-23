@@ -1,0 +1,282 @@
+---
+title: "Receive Real-Time Events from Built Block via Webhooks"
+sidebarTitle: "Webhooks"
+description: "Register an HTTPS endpoint, understand the payload structure, and verify HMAC-SHA256 signatures to securely handle Built Block webhook events in your app."
+---
+
+Built Block webhooks let your server react to platform events the moment they happen — no polling required. When something changes in Built Block (a project is created, an integration connects, or a workflow completes), Built Block sends an HTTP `POST` request to every webhook endpoint you have registered for that event type. This page explains how to register an endpoint, what the payload looks like, and how to confirm that each request genuinely came from Built Block.
+
+## When webhooks fire
+
+Built Block dispatches a webhook immediately after an event is committed to the platform. Delivery is attempted up to **five times** with exponential back-off (1 s, 5 s, 25 s, 125 s, 625 s). If all five attempts fail, the event is marked as **undelivered** and appears in the **Webhook Logs** panel in your dashboard, where you can manually replay it.
+
+Your endpoint must return any `2xx` HTTP status code within **10 seconds** to be considered a successful delivery. Timeouts and non-`2xx` responses both trigger a retry.
+
+---
+
+## Step 1 — Register a webhook endpoint
+
+You can register a webhook endpoint through the dashboard or directly via the REST API.
+
+### Via the dashboard
+
+1. Go to **Settings → Webhooks** in the Built Block dashboard.
+2. Click **Add Endpoint**.
+3. Enter your HTTPS URL, select the events you want to receive, and click **Save**.
+4. Copy the generated **Webhook Secret** — you need it to verify signatures.
+
+### Via the API
+
+Send a `POST` request to `/webhooks` with a JSON body describing your endpoint.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.builtblock.com/webhooks \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-server.example.com/hooks/builtblock",
+    "events": [
+      "project.created",
+      "project.updated",
+      "integration.connected"
+    ],
+    "description": "Production event handler"
+  }'
+```
+
+```javascript Node.js
+const response = await fetch("https://api.builtblock.com/webhooks", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    url: "https://your-server.example.com/hooks/builtblock",
+    events: ["project.created", "project.updated", "integration.connected"],
+    description: "Production event handler",
+  }),
+});
+
+const webhook = await response.json();
+console.log("Webhook ID:", webhook.id);
+console.log("Secret:", webhook.secret); // store this securely
+```
+
+```python Python
+import httpx
+
+response = httpx.post(
+    "https://api.builtblock.com/webhooks",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={
+        "url": "https://your-server.example.com/hooks/builtblock",
+        "events": ["project.created", "project.updated", "integration.connected"],
+        "description": "Production event handler",
+    },
+)
+
+webhook = response.json()
+print("Webhook ID:", webhook["id"])
+print("Secret:", webhook["secret"])  # store this securely
+```
+
+</CodeGroup>
+
+The response includes a `secret` field — a random string that Built Block uses to sign all payloads sent to this endpoint. Store it in a secure secrets manager; it is never returned again after the creation response.
+
+<Warning>
+  Your endpoint **must** use HTTPS. Built Block rejects `http://` URLs at registration time to protect your secret and prevent payload tampering in transit.
+</Warning>
+
+---
+
+## Step 2 — Understand the payload structure
+
+Every webhook request Built Block sends shares the same top-level JSON structure:
+
+```json
+{
+  "event": "project.created",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "data": {
+    "id": "proj_abc123",
+    "name": "My Project"
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `event` | `string` | The event type that fired (see full list below). |
+| `timestamp` | `string` | ISO 8601 UTC timestamp of when the event occurred. |
+| `data` | `object` | The resource payload. Shape varies by event type. |
+
+Built Block also sends the following HTTP headers with every request:
+
+| Header | Description |
+|---|---|
+| `X-BuiltBlock-Signature` | HMAC-SHA256 signature for payload verification (see below). |
+| `X-BuiltBlock-Event` | Mirrors the `event` field for quick server-side routing. |
+| `X-BuiltBlock-Delivery` | A unique UUID for this delivery attempt — useful for idempotency. |
+| `Content-Type` | Always `application/json`. |
+
+---
+
+## Step 3 — Handle event types
+
+Built Block currently emits the following event types:
+
+| Event | Fires when… |
+|---|---|
+| `project.created` | A new project is created in your account. |
+| `project.updated` | An existing project's name, settings, or status changes. |
+| `project.deleted` | A project is permanently deleted. |
+| `integration.connected` | An integration is successfully authorized and connected. |
+| `integration.disconnected` | An integration is removed or its authorization is revoked. |
+
+<Tip>
+  Subscribe only to the event types your application actually handles. This keeps your webhook logs clean and reduces unnecessary traffic to your server.
+</Tip>
+
+Your handler should check the `event` field and dispatch to the appropriate logic:
+
+```javascript Node.js (Express)
+app.post("/hooks/builtblock", express.raw({ type: "application/json" }), (req, res) => {
+  // Signature verification happens here (see next section)
+
+  const payload = JSON.parse(req.body);
+
+  switch (payload.event) {
+    case "project.created":
+      handleProjectCreated(payload.data);
+      break;
+    case "project.updated":
+      handleProjectUpdated(payload.data);
+      break;
+    case "project.deleted":
+      handleProjectDeleted(payload.data);
+      break;
+    case "integration.connected":
+      handleIntegrationConnected(payload.data);
+      break;
+    case "integration.disconnected":
+      handleIntegrationDisconnected(payload.data);
+      break;
+    default:
+      console.log("Unhandled event type:", payload.event);
+  }
+
+  res.sendStatus(200);
+});
+```
+
+<Note>
+  Always return `200` promptly — even for event types you do not handle — to prevent unnecessary retries. Move any slow processing (database writes, downstream HTTP calls) to a background queue.
+</Note>
+
+---
+
+## Step 4 — Verify webhook signatures
+
+Built Block signs every payload with HMAC-SHA256 using your webhook secret. Verifying this signature before processing the payload protects you from spoofed or tampered requests.
+
+The `X-BuiltBlock-Signature` header value has the format:
+
+```
+sha256=<hex-encoded HMAC-SHA256 digest>
+```
+
+To verify, compute the HMAC-SHA256 of the **raw request body** (before any JSON parsing) using your webhook secret as the key, then compare the result to the value in the header. Use a constant-time comparison to prevent timing attacks.
+
+<CodeGroup>
+
+```javascript Node.js
+const crypto = require("crypto");
+
+function verifySignature(rawBody, signatureHeader, secret) {
+  const expected = "sha256=" +
+    crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
+
+  // crypto.timingSafeEqual requires equal-length buffers
+  const expectedBuf = Buffer.from(expected, "utf8");
+  const receivedBuf = Buffer.from(signatureHeader, "utf8");
+
+  if (expectedBuf.length !== receivedBuf.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expectedBuf, receivedBuf);
+}
+
+// Express route — note express.raw() to preserve the raw body
+app.post("/hooks/builtblock", express.raw({ type: "application/json" }), (req, res) => {
+  const signature = req.headers["x-builtblock-signature"];
+
+  if (!verifySignature(req.body, signature, process.env.BUILTBLOCK_WEBHOOK_SECRET)) {
+    return res.status(401).send("Invalid signature");
+  }
+
+  const payload = JSON.parse(req.body);
+  // handle payload...
+  res.sendStatus(200);
+});
+```
+
+```python Python
+import hashlib
+import hmac
+import os
+
+from flask import Flask, abort, request
+
+app = Flask(__name__)
+
+def verify_signature(raw_body: bytes, signature_header: str, secret: str) -> bool:
+    expected = "sha256=" + hmac.new(
+        secret.encode("utf-8"),
+        raw_body,
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature_header)
+
+
+@app.route("/hooks/builtblock", methods=["POST"])
+def webhook():
+    signature = request.headers.get("X-BuiltBlock-Signature", "")
+    raw_body = request.get_data()  # raw bytes, before any parsing
+
+    if not verify_signature(raw_body, signature, os.environ["BUILTBLOCK_WEBHOOK_SECRET"]):
+        abort(401, "Invalid signature")
+
+    payload = request.get_json()
+    event = payload["event"]
+    # handle event...
+    return "", 200
+```
+
+</CodeGroup>
+
+<Warning>
+  Always verify signatures against the **raw, unparsed request body**. Parsing the JSON first can alter whitespace or key ordering, producing a different byte sequence and causing verification to fail on legitimate requests.
+</Warning>
+
+---
+
+## Rotate your webhook secret
+
+If your secret is ever exposed, rotate it immediately:
+
+1. Go to **Settings → Webhooks** in the dashboard.
+2. Click the webhook endpoint you want to update.
+3. Click **Rotate Secret** and confirm.
+
+Built Block generates a new secret and begins signing with it immediately. Update your server's environment variable before rotating to avoid a gap in verification.
+
+---
+
+## Replay failed deliveries
+
+Every undelivered event appears in the **Webhook Logs** tab on your webhook's detail page. Select any failed event and click **Replay** to re-send it. Replays carry the original `X-BuiltBlock-Delivery` UUID, so your server can detect and safely deduplicate them.

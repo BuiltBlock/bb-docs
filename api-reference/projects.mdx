@@ -1,0 +1,290 @@
+---
+title: "Projects API: Create, List, Update, and Delete Projects"
+sidebarTitle: "Projects"
+description: "Manage your Built Block projects over REST. Create, retrieve, update, archive, and delete projects programmatically using your API key."
+---
+
+Projects are the top-level containers for your workflows and integrations in Built Block. Use the endpoints below to manage projects across their full lifecycle — from creation through archival and deletion. All requests require a valid API key passed in the `Authorization` header.
+
+---
+
+## The project object
+
+Every successful response that returns a project includes the following fields.
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the project.
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  Human-readable name of the project.
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Optional description providing context about the project's purpose.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  Current state of the project. One of `active` or `archived`.
+</ResponseField>
+
+<ResponseField name="created_at" type="string" required>
+  ISO 8601 timestamp indicating when the project was created (e.g., `2024-01-15T10:30:00Z`).
+</ResponseField>
+
+<ResponseField name="updated_at" type="string" required>
+  ISO 8601 timestamp indicating when the project was last modified.
+</ResponseField>
+
+---
+
+## List all projects
+
+Retrieve a paginated list of all projects in your account. Use the `cursor` and `limit` parameters to page through large result sets, and `status` to filter by project state.
+
+**`GET /projects`**
+
+### Query parameters
+
+<ParamField query="limit" type="integer" default="20">
+  Maximum number of projects to return per page. Accepted range is `1`–`100`.
+</ParamField>
+
+<ParamField query="cursor" type="string">
+  Pagination cursor returned by a previous list response. Pass this value to retrieve the next page of results.
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter projects by status. Accepted values: `active`, `archived`. Omit this parameter to return projects of all statuses.
+</ParamField>
+
+### Response fields
+
+<ResponseField name="data" type="array">
+  Array of project objects matching the query.
+</ResponseField>
+
+<ResponseField name="next_cursor" type="string">
+  Cursor to pass as `cursor` in your next request to retrieve the following page. `null` when you have reached the last page.
+</ResponseField>
+
+<ResponseField name="has_more" type="boolean">
+  `true` if additional pages of results are available.
+</ResponseField>
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.builtblock.com/v1/projects \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```bash cURL — with filters
+curl "https://api.builtblock.com/v1/projects?status=active&limit=10" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "data": [
+    {
+      "id": "proj_01hx9z3k2m4n5p6q7r8s9t0u",
+      "name": "Customer Onboarding",
+      "description": "Automates new customer onboarding workflows.",
+      "status": "active",
+      "created_at": "2024-01-15T10:30:00Z",
+      "updated_at": "2024-03-22T14:05:33Z"
+    }
+  ],
+  "next_cursor": "cur_01hxab3k2m4n5p6q",
+  "has_more": true
+}
+```
+
+---
+
+## Create a project
+
+Create a new project in your account. Supply a `name` and, optionally, a `description` to help your team identify the project's purpose.
+
+**`POST /projects`**
+
+### Body parameters
+
+<ParamField body="name" type="string" required>
+  Display name for the project. Must be between 1 and 255 characters.
+</ParamField>
+
+<ParamField body="description" type="string">
+  A brief description of the project. Maximum 1 000 characters.
+</ParamField>
+
+### Response fields
+
+Returns the newly created [project object](#the-project-object). The initial `status` is always `active`.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.builtblock.com/v1/projects \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Customer Onboarding",
+    "description": "Automates new customer onboarding workflows."
+  }'
+```
+
+```json Request body
+{
+  "name": "Customer Onboarding",
+  "description": "Automates new customer onboarding workflows."
+}
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "id": "proj_01hx9z3k2m4n5p6q7r8s9t0u",
+  "name": "Customer Onboarding",
+  "description": "Automates new customer onboarding workflows.",
+  "status": "active",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+---
+
+## Get a project
+
+Retrieve the details of a single project by its unique ID.
+
+**`GET /projects/{id}`**
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the project to retrieve.
+</ParamField>
+
+### Response fields
+
+Returns the [project object](#the-project-object) for the given ID.
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.builtblock.com/v1/projects/proj_01hx9z3k2m4n5p6q7r8s9t0u \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "id": "proj_01hx9z3k2m4n5p6q7r8s9t0u",
+  "name": "Customer Onboarding",
+  "description": "Automates new customer onboarding workflows.",
+  "status": "active",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-03-22T14:05:33Z"
+}
+```
+
+---
+
+## Update a project
+
+Modify a project's `name`, `description`, or `status`. Send only the fields you want to change — omitted fields remain unchanged.
+
+**`PATCH /projects/{id}`**
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the project to update.
+</ParamField>
+
+### Body parameters
+
+<ParamField body="name" type="string">
+  New display name for the project. Must be between 1 and 255 characters.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Updated description. Pass an empty string (`""`) to clear an existing description.
+</ParamField>
+
+<ParamField body="status" type="string">
+  New status for the project. Accepted values: `active`, `archived`.
+</ParamField>
+
+### Response fields
+
+Returns the updated [project object](#the-project-object) with a refreshed `updated_at` timestamp.
+
+<Note>
+  Archiving a project (`status: "archived"`) does not delete its workflows or integrations. You can restore an archived project at any time by setting `status` back to `"active"`.
+</Note>
+
+<CodeGroup>
+
+```bash cURL — rename
+curl -X PATCH https://api.builtblock.com/v1/projects/proj_01hx9z3k2m4n5p6q7r8s9t0u \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Enterprise Onboarding"}'
+```
+
+```bash cURL — archive
+curl -X PATCH https://api.builtblock.com/v1/projects/proj_01hx9z3k2m4n5p6q7r8s9t0u \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "archived"}'
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "id": "proj_01hx9z3k2m4n5p6q7r8s9t0u",
+  "name": "Enterprise Onboarding",
+  "description": "Automates new customer onboarding workflows.",
+  "status": "active",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-04-10T09:14:20Z"
+}
+```
+
+---
+
+## Delete a project
+
+Permanently delete a project and all of its associated workflows and integrations. This action is irreversible.
+
+**`DELETE /projects/{id}`**
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the project to delete.
+</ParamField>
+
+<Warning>
+  Deleting a project permanently removes all workflows, integration connections, and webhook registrations scoped to that project. This cannot be undone. Consider archiving the project first if you may need to reference it later.
+</Warning>
+
+A successful deletion returns an HTTP `204 No Content` response with no body.
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE https://api.builtblock.com/v1/projects/proj_01hx9z3k2m4n5p6q7r8s9t0u \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>

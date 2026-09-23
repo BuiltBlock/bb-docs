@@ -1,17 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "projectType": "saas",
+  "projectName": "Built Block",
+  "projectDescription": "Built Block is a SaaS platform that lets teams build, manage, and integrate workflows through a powerful API and Model Context Protocol (MCP) integrations.",
   "theme": "luma",
-  "name": "Built Block",
-  "colors": {
-    "primary": "#ef7025",
-    "light": "#eec9bc",
-    "dark": "#4fa1ab"
-  },
-  "favicon": "/favicon.svg",
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
+  "primaryColor": "#ef7025",
+  "lightColor": "#eec9bc",
+  "darkColor": "#4fa1ab",
   "navigation": {
     "tabs": [
       {
@@ -77,23 +71,26 @@
       }
     ]
   },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:support@builtblock.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.builtblock.com"
-    }
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/builtblock",
-      "github": "https://github.com/builtblock"
-    }
-  }
+  "keyFeatures": [
+    "Platform dashboard for managing projects and workflows",
+    "REST API for programmatic access to all platform resources",
+    "Model Context Protocol (MCP) server for AI assistant integrations",
+    "Webhooks for real-time event notifications",
+    "Third-party integrations and connectors",
+    "API key and OAuth-based authentication"
+  ],
+  "publicApiSurface": [
+    "GET /projects",
+    "POST /projects",
+    "GET /projects/{id}",
+    "PATCH /projects/{id}",
+    "DELETE /projects/{id}",
+    "GET /integrations",
+    "POST /integrations",
+    "GET /webhooks",
+    "POST /webhooks",
+    "GET /users/me",
+    "MCP tools endpoint",
+    "MCP resources endpoint"
+  ]
 }

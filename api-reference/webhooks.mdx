@@ -1,0 +1,297 @@
+---
+title: "Webhooks API: Register and Manage Webhook Endpoints"
+sidebarTitle: "Webhooks"
+description: "Register HTTP endpoints to receive real-time Built Block event notifications. List, create, inspect, delete, and test webhooks through the REST API."
+---
+
+Webhooks let your application receive real-time notifications whenever key events occur in Built Block — such as a project being created or an integration disconnecting. When an event fires, Built Block sends an HTTP `POST` request to your registered URL with a JSON payload describing the event. Use the endpoints below to manage your webhook registrations.
+
+---
+
+## The webhook object
+
+Every successful response that returns a webhook includes the following fields.
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the webhook.
+</ResponseField>
+
+<ResponseField name="url" type="string" required>
+  The HTTPS endpoint Built Block sends event payloads to.
+</ResponseField>
+
+<ResponseField name="events" type="array of strings" required>
+  The list of event types this webhook is subscribed to. See [Supported events](#supported-events) for all valid values.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  Current delivery state of the webhook. One of `active` or `disabled`.
+</ResponseField>
+
+<ResponseField name="secret" type="string">
+  Shared secret used to sign webhook payloads. Returned as a masked value (e.g., `whsec_••••••••`) after creation. Store the original value securely — it cannot be retrieved in full after the initial creation response.
+</ResponseField>
+
+<ResponseField name="created_at" type="string" required>
+  ISO 8601 timestamp indicating when the webhook was registered.
+</ResponseField>
+
+---
+
+## Supported events
+
+Subscribe to one or more of the following event types when registering a webhook.
+
+| Event | Description |
+|---|---|
+| `project.created` | A new project was created. |
+| `project.updated` | A project's name, description, or status was changed. |
+| `project.deleted` | A project was permanently deleted. |
+| `integration.connected` | An integration successfully established a connection. |
+| `integration.disconnected` | An integration lost its connection or was deleted. |
+
+<Tip>
+  To subscribe to all current and future events, you can register separate webhooks per event group. Built Block does not support a wildcard `*` event selector at this time.
+</Tip>
+
+---
+
+## List all webhooks
+
+Retrieve all webhook registrations in your account.
+
+**`GET /webhooks`**
+
+### Response fields
+
+<ResponseField name="data" type="array">
+  Array of webhook objects.
+</ResponseField>
+
+<ResponseField name="has_more" type="boolean">
+  `true` if additional pages of results are available.
+</ResponseField>
+
+<ResponseField name="next_cursor" type="string">
+  Pagination cursor to pass as `cursor` in your next request. `null` when no further pages exist.
+</ResponseField>
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.builtblock.com/v1/webhooks \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "data": [
+    {
+      "id": "wh_01hxc5d3e4f5g6h7i8j9k0l1m",
+      "url": "https://example.com/builtblock/events",
+      "events": ["project.created", "project.deleted"],
+      "status": "active",
+      "secret": "whsec_••••••••",
+      "created_at": "2024-03-10T12:00:00Z"
+    }
+  ],
+  "has_more": false,
+  "next_cursor": null
+}
+```
+
+---
+
+## Create a webhook
+
+Register a new webhook endpoint to start receiving event notifications. Provide the destination URL, the events you want to subscribe to, and an optional secret for payload verification.
+
+**`POST /webhooks`**
+
+### Body parameters
+
+<ParamField body="url" type="string" required>
+  The HTTPS endpoint that Built Block will `POST` event payloads to. Must be a valid HTTPS URL — plain HTTP endpoints are not accepted.
+</ParamField>
+
+<ParamField body="events" type="array of strings" required>
+  One or more event types to subscribe to. Must contain at least one entry. See [Supported events](#supported-events) for valid values.
+</ParamField>
+
+<ParamField body="secret" type="string">
+  An optional shared secret (minimum 16 characters). When provided, Built Block signs each payload and includes the signature in the `X-BuiltBlock-Signature` request header so your server can verify the request's authenticity.
+</ParamField>
+
+### Response fields
+
+Returns the newly created [webhook object](#the-webhook-object). Store the `secret` value now — it is returned in full only in this response.
+
+<Note>
+  Built Block expects your endpoint to respond with an HTTP `2xx` status within 10 seconds. Deliveries that time out or receive a non-`2xx` response are retried up to 5 times with exponential backoff.
+</Note>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.builtblock.com/v1/webhooks \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/builtblock/events",
+    "events": ["project.created", "project.deleted"],
+    "secret": "whsec_supersecretvalue"
+  }'
+```
+
+```json Request body
+{
+  "url": "https://example.com/builtblock/events",
+  "events": ["project.created", "project.deleted"],
+  "secret": "whsec_supersecretvalue"
+}
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "id": "wh_01hxc5d3e4f5g6h7i8j9k0l1m",
+  "url": "https://example.com/builtblock/events",
+  "events": ["project.created", "project.deleted"],
+  "status": "active",
+  "secret": "whsec_supersecretvalue",
+  "created_at": "2024-03-10T12:00:00Z"
+}
+```
+
+---
+
+## Get a webhook
+
+Retrieve the details of a single webhook registration by its ID.
+
+**`GET /webhooks/{id}`**
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the webhook to retrieve.
+</ParamField>
+
+### Response fields
+
+Returns the [webhook object](#the-webhook-object) for the given ID. The `secret` field is always masked in retrieval responses.
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.builtblock.com/v1/webhooks/wh_01hxc5d3e4f5g6h7i8j9k0l1m \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "id": "wh_01hxc5d3e4f5g6h7i8j9k0l1m",
+  "url": "https://example.com/builtblock/events",
+  "events": ["project.created", "project.deleted"],
+  "status": "active",
+  "secret": "whsec_••••••••",
+  "created_at": "2024-03-10T12:00:00Z"
+}
+```
+
+---
+
+## Delete a webhook
+
+Permanently remove a webhook registration. Built Block will immediately stop sending event notifications to the associated URL.
+
+**`DELETE /webhooks/{id}`**
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the webhook to delete.
+</ParamField>
+
+<Warning>
+  Deleting a webhook is permanent. In-flight deliveries that have already been dispatched may still arrive at your endpoint, but no new events will be sent after deletion.
+</Warning>
+
+A successful deletion returns an HTTP `204 No Content` response with no body.
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE https://api.builtblock.com/v1/webhooks/wh_01hxc5d3e4f5g6h7i8j9k0l1m \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+---
+
+## Test a webhook
+
+Send a synthetic test event to your webhook endpoint to verify that your server is reachable and processing payloads correctly. Built Block dispatches a `webhook.test` event to the registered URL and returns the result of the delivery attempt.
+
+**`POST /webhooks/{id}/test`**
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the webhook to test.
+</ParamField>
+
+### Response fields
+
+<ResponseField name="delivered" type="boolean" required>
+  `true` if your endpoint responded with an HTTP `2xx` status within the timeout window.
+</ResponseField>
+
+<ResponseField name="response_status" type="integer">
+  The HTTP status code returned by your endpoint, or `null` if the request timed out or could not connect.
+</ResponseField>
+
+<ResponseField name="response_time_ms" type="integer">
+  Round-trip delivery time in milliseconds.
+</ResponseField>
+
+<ResponseField name="error" type="string">
+  Human-readable error message if delivery failed. `null` on success.
+</ResponseField>
+
+<Tip>
+  Run a test delivery after creating or updating any server-side webhook handler to confirm your endpoint is responding correctly before live events start flowing.
+</Tip>
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.builtblock.com/v1/webhooks/wh_01hxc5d3e4f5g6h7i8j9k0l1m/test \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+```json Response — success
+{
+  "delivered": true,
+  "response_status": 200,
+  "response_time_ms": 143,
+  "error": null
+}
+```
+
+```json Response — failure
+{
+  "delivered": false,
+  "response_status": 503,
+  "response_time_ms": 8201,
+  "error": "Endpoint returned HTTP 503 Service Unavailable."
+}
+```

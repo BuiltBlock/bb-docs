@@ -1,0 +1,116 @@
+---
+title: "Connect Third-Party Services to Built Block"
+sidebarTitle: "Integrations"
+description: "Add and manage integrations that connect Built Block to external services like Slack, GitHub, and custom webhooks."
+---
+
+**Integrations** are connectors that let Built Block send data to, receive data from, or trigger actions in external services. Once an integration is set up, your workflows can reference it by name — meaning you store credentials once and reuse them across as many workflows as you need. Built Block supports webhook senders, data sources, notification channels, and Model Context Protocol (MCP) tool providers.
+
+## Integration types
+
+| Type | Description | Examples |
+|---|---|---|
+| **Webhook sender** | Sends HTTP requests to an external URL when a workflow step executes. | Zapier, Make, custom REST endpoints |
+| **Data source** | Pulls or receives structured data that your workflows can read and act on. | Databases, file storage, form submissions |
+| **Notification channel** | Delivers messages or alerts triggered by workflow events. | Slack, email, PagerDuty |
+| **MCP tool provider** | Exposes external capabilities as structured tools callable by AI agents via MCP. | LLM sidecars, AI agent frameworks |
+
+## Add an integration
+
+<Steps>
+  <Step title="Open the Integrations section">
+    Click **Integrations** in the left-hand sidebar. The integrations catalogue lists every available connector.
+  </Step>
+  <Step title="Find the service you want to connect">
+    Use the search bar or browse by category (**Notifications**, **Data Sources**, **Webhooks**, **MCP**) to find the integration you need.
+  </Step>
+  <Step title="Click Connect">
+    Select the integration card and click **Connect**. A configuration panel slides in from the right.
+  </Step>
+  <Step title="Enter credentials or authorize access">
+    Depending on the integration, you will either:
+    - Paste an **API key** or **secret token** from the external service, or
+    - Complete an **OAuth 2.0 authorization flow** by clicking **Authorize** and signing in to the external service in the popup window.
+
+    <Note>
+      All credentials are encrypted at rest using AES-256 and are never exposed in plain text after they are saved. You can rotate or revoke them at any time from the integration detail page.
+    </Note>
+  </Step>
+  <Step title="Name the integration and save">
+    Give the integration a recognizable **Display Name** (for example, `slack-engineering-alerts` or `github-org-webhooks`). Click **Save Integration**. Built Block validates the credentials before saving — if validation fails, check that the token or OAuth scopes are correct.
+  </Step>
+</Steps>
+
+## Configure a Slack notification integration
+
+The following example shows how to configure a Slack integration using an incoming webhook URL.
+
+<Steps>
+  <Step title="Generate a Slack incoming webhook">
+    In Slack, go to **Apps → Incoming Webhooks** and create a new webhook for the channel where you want Built Block to post messages. Copy the webhook URL.
+  </Step>
+  <Step title="Add the integration in Built Block">
+    In the Built Block dashboard, search for **Slack** in the Integrations catalogue and click **Connect**.
+  </Step>
+  <Step title="Paste the webhook URL">
+    In the **Webhook URL** field, paste the URL you copied from Slack. Set the display name to something like `slack-#alerts-channel`.
+  </Step>
+  <Step title="Send a test message">
+    Click **Test Connection**. Built Block posts a test message to the Slack channel. If you see the message, click **Save Integration**.
+  </Step>
+</Steps>
+
+<Tip>
+  Create one integration per Slack channel rather than one integration for your entire Slack workspace. This makes it easy to route different workflow alerts to the right audience.
+</Tip>
+
+## Use an integration in a workflow
+
+Once an integration is saved, reference it by name in your workflow configuration. In the dashboard workflow editor, open the step where you want to use the integration and select it from the **Integration** dropdown. In the REST API, pass the integration's `id` in the relevant step payload:
+
+<CodeGroup>
+```json Workflow step payload
+{
+  "step_type": "notify",
+  "integration_id": "int_01hx9g3abc123",
+  "config": {
+    "message": "Workflow {{workflow.name}} completed successfully."
+  }
+}
+```
+</CodeGroup>
+
+## Manage credentials securely
+
+<Warning>
+  Never paste integration credentials — API keys, tokens, or OAuth secrets — into workflow configuration fields or code comments. Always store them through the Integrations section so that Built Block can encrypt and manage them properly. If a credential is ever exposed, revoke it in the external service immediately and reconnect the integration with a new credential.
+</Warning>
+
+To rotate a credential:
+
+1. Open the integration from the **Integrations** list.
+2. Click **Edit Credentials**.
+3. Enter the new token or re-authorize via OAuth.
+4. Click **Save**. The updated credential takes effect immediately for all workflows that use this integration.
+
+## Frequently asked questions
+
+<Accordion title="Can I add custom integrations?">
+  Yes. Select **Custom Webhook** from the integrations catalogue to configure a generic HTTP connector. Enter the target URL, choose the HTTP method (`POST`, `PUT`, or `PATCH`), and optionally add custom headers — for example, an `Authorization` header for bearer-token authentication. Custom webhook integrations work the same way as built-in integrations once saved.
+
+  For MCP-based custom integrations, select **Custom MCP Tool** and provide the MCP server URL and authentication details. Built Block will discover the available tools automatically through the MCP protocol handshake.
+</Accordion>
+
+<Accordion title="How do I disconnect an integration?">
+  Open the integration from the **Integrations** list and click the **⋯ More** menu, then select **Disconnect**. Confirm the action in the dialog. Disconnecting an integration does **not** delete the workflows that reference it, but those workflows will fail at any step that calls the disconnected integration until you reconnect it or swap it for a different one.
+
+  To avoid workflow failures, review which workflows use the integration before disconnecting. You can see a list of dependent workflows on the integration detail page under the **Used by** tab.
+</Accordion>
+
+<Accordion title="How many integrations can I add?">
+  The number of active integrations depends on your billing plan. Check your current limits under **Settings → Billing**. If you need to add more integrations than your plan allows, upgrade your plan or archive unused integrations to free up slots.
+</Accordion>
+
+<Accordion title="Does Built Block support OAuth refresh tokens?">
+  Yes. For integrations that use OAuth 2.0, Built Block automatically refreshes access tokens in the background before they expire. You only need to re-authorize if the external service revokes access or if the refresh token itself expires (some services limit refresh token lifetime). Built Block surfaces a banner in the Integrations list when re-authorization is required.
+</Accordion>
