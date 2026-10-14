@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "luma",
-  "name": "Built Block",
+  "name": "BuiltBlock",
   "colors": {
     "primary": "#ef7025",
     "light": "#eec9bc",
@@ -18,43 +18,48 @@
         "tab": "Documentation",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Get started",
             "pages": [
               "introduction",
               "quickstart",
-              "authentication"
+              "concepts"
             ]
           },
           {
-            "group": "Platform",
+            "group": "Product",
             "pages": [
-              "platform/overview",
-              "platform/projects",
-              "platform/integrations",
-              "platform/settings"
+              "product/desk",
+              "product/model",
+              "product/explore",
+              "product/settings"
+            ]
+          },
+          {
+            "group": "Sources",
+            "pages": [
+              "sources/overview",
+              "sources/hubspot",
+              "sources/gong",
+              "sources/granola",
+              "sources/gmail",
+              "sources/slack",
+              "sources/google-calendar"
             ]
           },
           {
             "group": "MCP",
             "pages": [
               "mcp/overview",
-              "mcp/setup",
-              "mcp/tools",
-              "mcp/resources"
-            ]
-          },
-          {
-            "group": "Guides",
-            "pages": [
-              "guides/first-integration",
-              "guides/webhooks",
-              "guides/ai-assistants"
+              "mcp/connect",
+              "mcp/ask",
+              "mcp/run-account",
+              "mcp/intake"
             ]
           }
         ]
       },
       {
-        "tab": "API Reference",
+        "tab": "API reference",
         "groups": [
           {
             "group": "Overview",
@@ -65,18 +70,37 @@
             ]
           },
           {
-            "group": "Endpoints",
+            "group": "Accounts",
+            "openapi": "openapi.json",
             "pages": [
-              "api-reference/projects",
-              "api-reference/integrations",
-              "api-reference/webhooks",
-              "api-reference/users"
+              "GET /v1/accounts",
+              "POST /v1/accounts",
+              "GET /v1/accounts/resolve",
+              "GET /v1/accounts/{id}/state",
+              "PATCH /v1/accounts/{id}"
             ]
           }
         ]
       }
     ]
   },
+  "redirects": [
+    { "source": "/authentication", "destination": "/api-reference/authentication" },
+    { "source": "/platform/overview", "destination": "/product/desk" },
+    { "source": "/platform/projects", "destination": "/product/model" },
+    { "source": "/platform/integrations", "destination": "/sources/overview" },
+    { "source": "/platform/settings", "destination": "/product/settings" },
+    { "source": "/mcp/setup", "destination": "/mcp/connect" },
+    { "source": "/mcp/tools", "destination": "/mcp/overview" },
+    { "source": "/mcp/resources", "destination": "/mcp/overview" },
+    { "source": "/guides/first-integration", "destination": "/quickstart" },
+    { "source": "/guides/webhooks", "destination": "/introduction" },
+    { "source": "/guides/ai-assistants", "destination": "/mcp/connect" },
+    { "source": "/api-reference/projects", "destination": "/api-reference/introduction" },
+    { "source": "/api-reference/integrations", "destination": "/sources/overview" },
+    { "source": "/api-reference/webhooks", "destination": "/api-reference/introduction" },
+    { "source": "/api-reference/users", "destination": "/api-reference/introduction" }
+  ],
   "navbar": {
     "links": [
       {

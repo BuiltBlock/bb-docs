@@ -1,0 +1,40 @@
+---
+title: "intake"
+sidebarTitle: "intake"
+description: "Admins paste a note, email, or transcript. BuiltBlock attaches it when it can tell which company it belongs to."
+---
+
+`intake` adds pasted context to the customer model. It is admin-only. If you are not an admin, the tool returns `forbidden`.
+
+Use it for a note, an email, a transcript, or a list of companies you want added. Do not use it for a HubSpot company. That is [`run_account`](/mcp/run-account).
+
+BuiltBlock keeps the text, looks for a matching account, and creates a company only when the identity is strong enough.
+
+## Inputs
+
+<ParamField body="text" type="string">
+  A pasted note, email, transcript, CSV, or a request to add named companies.
+</ParamField>
+
+<ParamField body="intent" type="string">
+  `enroll` adds the companies you named. `infer` attaches the text, or creates a company only with a strong identity.
+</ParamField>
+
+<ParamField body="fromGranola" type="boolean">
+  Set to `true` to run unmatched Granola notes through intake. Omit `text` for that run.
+</ParamField>
+
+## What gets created
+
+- **enroll**: BuiltBlock can create a company you explicitly asked to add.
+- **infer**: BuiltBlock creates a company only from a work-email domain or a legal name such as Inc or LLC. A personal address such as gmail.com, or a first name, is not enough.
+- If the company is unclear, the text stays stored and is not attached to the wrong account.
+
+`fromGranola` uses infer mode for Granola notes that never matched an account. Connect [Granola](/sources/granola) first.
+
+## Errors
+
+| Error | Meaning |
+| --- | --- |
+| `forbidden` | The signed-in person is not an admin |
+| `bad_query` | The text or flags cannot be processed |

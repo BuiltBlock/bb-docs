@@ -1,0 +1,39 @@
+---
+title: "HubSpot"
+sidebarTitle: "HubSpot"
+description: "Connect HubSpot, then add companies by name. BuiltBlock does not import the rest of your CRM."
+---
+
+HubSpot is the company source. Connecting it lets an admin add specific companies. BuiltBlock does not walk the CRM or backfill every company.
+
+Only an organization admin can connect HubSpot or add companies.
+
+## Connect
+
+<Steps>
+  <Step title="Open HubSpot">
+    Go to **Settings**, then **Sources**, and open **HubSpot**.
+  </Step>
+  <Step title="Sign in">
+    Sign in with HubSpot. The status becomes connected when BuiltBlock has permission to read the account.
+  </Step>
+  <Step title="Add companies">
+    Enter company names under **Add companies**. Separate names with commas or new lines. Select **Add accounts**.
+
+    You can add up to 200 names at a time. BuiltBlock queues them and resolves each name in the background.
+  </Step>
+</Steps>
+
+A name has to match one HubSpot company. If the name is different, or more than one company matches, that name is not added.
+
+## What gets pulled
+
+For each company, BuiltBlock pulls the company, its contacts, deals, notes, emails, calls, and meetings. Processing continues after **Add accounts** returns. The sidebar shows **Setting up** until the account is ready to ask about.
+
+You can also add a company from [MCP](/mcp/run-account) or from **New chat** if you are an admin. Those paths accept a name, a domain, a HubSpot company id, or every company that has a deal.
+
+## Deals
+
+An admin can add every HubSpot company that has a deal, up to 500 companies. That action is available from [`run_account`](/mcp/run-account), not from the names box on this page. Companies beyond 500 are left off, and the result says the list was truncated.
+
+Connecting HubSpot still does not import the CRM on its own. A daily refresh updates companies you already added. It does not look for new companies.

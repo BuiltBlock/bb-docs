@@ -1,55 +1,50 @@
 ---
-title: "Built Block: Build and Automate Workflows with Ease"
-sidebarTitle: "Introduction"
-description: "Built Block is a SaaS platform for building, managing, and automating workflows through a powerful REST API and Model Context Protocol (MCP) integrations."
+title: "What BuiltBlock is"
+sidebarTitle: "What BuiltBlock is"
+description: "BuiltBlock keeps every account current in Desk, shows what needs attention, and prepares the next piece of work."
 ---
 
-Built Block gives your team a unified platform for creating and managing workflows, connecting third-party services, and exposing your data to AI assistants through the Model Context Protocol. Whether you're automating business processes through the dashboard or integrating programmatically via the API, Built Block adapts to how you work.
+Customer teams lose time rebuilding what happened on an account before they can do anything about it. BuiltBlock keeps that context together and carries the work forward.
+
+[Desk](/product/desk) is the product. Open it and you see which accounts need you today, what changed, and the next step already prepared. You spend the time with the customer, not catching up.
+
+BuiltBlock is not a CRM. It does not own your pipeline, close dates, or the system where the deal lives. It keeps the account current and moves the work.
+
+<Card title="Start in Desk" icon="layout-grid" href="/product/desk">
+  See today's accounts, open one, and work from the step BuiltBlock prepared
+</Card>
+
+## What you get from Desk
+
+Desk follows an account across the work that actually happens: an evaluation, a stalled onboarding, a renewal that has not been approved.
+
+For each account it manages, Desk does three things:
+
+- **Keeps the account current.** Calls, mail, meetings, notes, and CRM context land on one account, with the people involved.
+- **Shows what needs attention.** **Focus** is the short list for today: the account, the job, and the next action.
+- **Prepares the next step.** You might open a drafted email, an investigation of what changed, or a note that BuiltBlock is waiting and will check back.
+
+You confirm a customer email before it sends. Desk does not post to Slack, and a meeting card does not create a calendar event.
+
+## The customer model underneath
+
+Desk can only prepare that work because each account has one model: who the customer is, what they want, how they plan to use the product, and what happened along the way. When there is enough history, the account also carries relationship, risk, a written summary, and usage.
+
+You do not have to assemble that model yourself. Connect a source, add the companies you care about, and turn those accounts on for Desk. The [concepts](/concepts) page is the short glossary. The [customer model](/product/model) page shows what has been stored.
+
+## Other ways in
+
+Desk is where the team works. Two other doors use the same accounts:
+
+**MCP** lets Claude, ChatGPT, or Cursor ask about the book and, for an admin, add a company or a note. The server is `https://mcp.builtblock.com/mcp`. Sign in with your BuiltBlock account.
+
+**The Account API** at `https://api.builtblock.com` lets your own systems read an account or push a note. Create a key on the **API** page.
 
 <CardGroup cols={2}>
-  <Card title="Quick Start" icon="rocket" href="/quickstart">
-    Get up and running with Built Block in under five minutes
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Add a company and open it in Desk
   </Card>
-  <Card title="Authentication" icon="key" href="/authentication">
-    Learn how to authenticate your API requests with Built Block
-  </Card>
-  <Card title="Platform Overview" icon="grid-2" href="/platform/overview">
-    Explore the Built Block dashboard and core platform features
-  </Card>
-  <Card title="API Reference" icon="code" href="/api-reference/introduction">
-    Explore the full REST API to integrate Built Block into your stack
-  </Card>
-  <Card title="MCP Integration" icon="robot" href="/mcp/overview">
-    Connect AI assistants to Built Block using the Model Context Protocol
-  </Card>
-  <Card title="Webhooks" icon="webhook" href="/guides/webhooks">
-    Receive real-time event notifications in your own systems
-  </Card>
-</CardGroup>
-
-## What You Can Do with Built Block
-
-Built Block covers three main capability areas:
-
-**Platform** — Use the dashboard to create projects, configure integrations, and manage your team's settings without writing any code.
-
-**API** — Call the REST API to create and manage projects, trigger workflows, and retrieve data programmatically from your own applications.
-
-**MCP** — Connect popular AI assistants (Claude, Cursor, VS Code, and others) to Built Block so they can query and act on your platform data using natural language.
-
-## How the Docs Are Organized
-
-<CardGroup cols={2}>
-  <Card title="Get Started" icon="flag-checkered" href="/quickstart">
-    Account setup, authentication, and your first API call
-  </Card>
-  <Card title="Platform" icon="grid-2" href="/platform/overview">
-    Dashboard features: projects, integrations, and settings
-  </Card>
-  <Card title="MCP" icon="plug" href="/mcp/overview">
-    Set up and use the Built Block MCP server with AI tools
-  </Card>
-  <Card title="Guides" icon="book-open" href="/guides/first-integration">
-    Step-by-step walkthroughs for common tasks
+  <Card title="Connect a source" icon="plug" href="/sources/overview">
+    HubSpot adds companies. Calls, mail, and meetings attach after that
   </Card>
 </CardGroup>

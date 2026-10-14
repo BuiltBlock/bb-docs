@@ -1,0 +1,74 @@
+---
+title: "run_account"
+sidebarTitle: "run_account"
+description: "Admins add a HubSpot company by name, domain, or company id. The tool returns when the work is queued."
+---
+
+`run_account` adds a company from HubSpot and queues processing. It is admin-only. If you are not an admin, the tool returns `forbidden`.
+
+The tool returns when the pull is queued, not when the account is ready to ask about. Do not wait on it for a finished diagnosis.
+
+HubSpot has to be [connected](/sources/hubspot) first. This tool does not import the rest of the CRM.
+
+## Add one company
+
+Provide one of these:
+
+<ParamField body="name" type="string">
+  Company name, such as `Storable`. The name must match one HubSpot company.
+</ParamField>
+
+<ParamField body="domain" type="string">
+  Company domain, such as `storable.com`.
+</ParamField>
+
+<ParamField body="hubspotId" type="string">
+  HubSpot company id.
+</ParamField>
+
+A name that matches nothing, or more than one company, pulls nothing.
+
+A successful result names the company and reports what was saved and queued:
+
+```json
+{
+  "account": "Storable",
+  "pulled": { "saved": 12, "skipped": 0, "unmatched": 1, "byType": { "notes": 4 } },
+  "landed": { "landed": 6, "assigned": 0, "skippedEmpty": 0, "unmatched": 1 },
+  "enqueued": { "extract": 6 }
+}
+```
+
+`account` is the company name. `pulled` is how many HubSpot records were saved, skipped, or left unmatched. `landed` is how many interactions were stored. `enqueued.extract` is how many were queued for processing. Processing continues after this response.
+
+## Add companies that have deals
+
+<ParamField body="fromDeals" type="boolean">
+  Set to `true` to add every HubSpot company that has a deal. Omit `name`, `domain`, and `hubspotId`.
+</ParamField>
+
+BuiltBlock takes up to 500 companies. If there are more, `truncated` is `true` and the rest are left off.
+
+```json
+{
+  "from": "deals",
+  "deals": 40,
+  "companies": 28,
+  "enrolled": 28,
+  "skippedNoCompany": 0,
+  "truncated": false,
+  "hubspotIds": [],
+  "enqueued": { "pull": 28 }
+}
+```
+
+## Errors
+
+| Error | Meaning |
+| --- | --- |
+| `forbidden` | The signed-in person is not an admin |
+| `no_hubspot` | HubSpot is not connected |
+| `not_found` | No single company matched |
+| `bad_query` | The arguments cannot be used together |
+
+You can also add companies by name from **Settings**, on the HubSpot source. That box accepts up to 200 names. See [HubSpot](/sources/hubspot).
