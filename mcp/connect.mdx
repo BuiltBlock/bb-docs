@@ -1,0 +1,75 @@
+---
+title: "Connect MCP"
+sidebarTitle: "Connect"
+description: "Add the BuiltBlock MCP server in Claude, ChatGPT, Cursor, or a custom client, then sign in."
+---
+
+The server URL is `https://mcp.builtblock.com/mcp`. Sign in with the same BuiltBlock account you use in the app. Tool access follows that person's role. Admins can add companies and paste notes. Everyone else can ask.
+
+You can also open **MCP** from the account menu in the app. That page has the same steps.
+
+## Claude
+
+<Steps>
+  <Step title="Add a custom connector">
+    [Open BuiltBlock in Claude](https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=BuiltBlock&connectorUrl=https%3A%2F%2Fmcp.builtblock.com%2Fmcp). Confirm the prefilled server URL, then select **Add**.
+  </Step>
+  <Step title="Sign in to BuiltBlock">
+    Use the same account you use in the app.
+  </Step>
+  <Step title="Use BuiltBlock in a chat">
+    Make BuiltBlock available to the conversation, then ask a question.
+  </Step>
+</Steps>
+
+## ChatGPT
+
+<Steps>
+  <Step title="Enable Developer mode">
+    Open [Security and Login](https://chatgpt.com/#settings/Security) in ChatGPT and turn on **Developer mode**.
+  </Step>
+  <Step title="Add BuiltBlock">
+    [Create a connection](https://chatgpt.com/plugins#settings/Connectors?create-connector=true&redirectAfter=%2Fplugins) named BuiltBlock. Paste `https://mcp.builtblock.com/mcp` and select **OAuth**.
+  </Step>
+  <Step title="Sign in and select BuiltBlock">
+    Finish creating the connection and sign in to BuiltBlock. In a chat, enable **Developer mode** from the plus menu and select BuiltBlock.
+  </Step>
+</Steps>
+
+## Cursor
+
+<Steps>
+  <Step title="Add the MCP configuration">
+    Open Cursor's MCP settings. Add this configuration to `.cursor/mcp.json` for one project, or to `~/.cursor/mcp.json` for every project. See the [Cursor MCP docs](https://cursor.com/docs/mcp).
+  </Step>
+  <Step title="Sign in to BuiltBlock">
+    Complete sign-in when Cursor prompts you, then enable the BuiltBlock tools.
+  </Step>
+</Steps>
+
+```json
+{
+  "mcpServers": {
+    "builtblock": {
+      "url": "https://mcp.builtblock.com/mcp"
+    }
+  }
+}
+```
+
+## Custom client
+
+Use an MCP client that supports OAuth. Register the app once, sign in to BuiltBlock, and discover the tools.
+
+```text
+MCP https://mcp.builtblock.com/mcp
+Discover https://mcp.builtblock.com/.well-known/oauth-protected-resource
+Authorize at https://auth.builtblock.com with resource=https://mcp.builtblock.com
+Register the app once. Call /mcp with the access token.
+```
+
+The `resource` value has to be `https://mcp.builtblock.com`. A token minted for a different resource is rejected.
+
+<Check>
+  Ask "What patterns show up across our accounts?" If the client is connected, the assistant calls `ask` and answers from your customer model.
+</Check>

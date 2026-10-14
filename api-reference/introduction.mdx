@@ -1,111 +1,31 @@
 ---
-title: "Built Block REST API: Overview and Getting Started"
+title: "Account API"
 sidebarTitle: "Introduction"
-description: "Learn how to make requests to the Built Block REST API, including base URL, versioning, request format, pagination, and rate limiting."
+description: "Read one customer, the customer book, or push a note with an API key from the BuiltBlock API page."
 ---
 
-The Built Block REST API gives you programmatic access to all platform resources — workflows, projects, integrations, and more. Every feature available in the dashboard is also available through the API, so you can build, automate, and manage your workflows entirely in code.
+The Account API is at `https://api.builtblock.com`. Use it to read diagnosis for one customer, list the customer book, resolve a name or domain to an account id, push one item, or set lifecycle and the date they became a customer.
 
-## Base URL
+Create a key on the **API** page in the app. Session cookies are rejected. MCP uses sign-in, not this key. See [Authentication](/api-reference/authentication).
 
-All API requests target the following base URL:
+This reference matches the Account API as of October 13, 2026. When the API changes, this spec is updated with it.
 
-```text
-https://api.builtblock.com/v1
-```
+## Endpoints
 
-The version (`v1`) is embedded in the URL path. When new major versions are released, the previous version remains available for a deprecation window so you have time to migrate.
+| Method | Path | What it does |
+| --- | --- | --- |
+| `GET` | [`/v1/accounts`](/api-reference/executive-customer-book) | The customer book. Defaults to customers. Returns up to 500 rows. |
+| `POST` | [`/v1/accounts`](/api-reference/push-account-data) | Push an account, an optional person, and one item, then queue processing |
+| `GET` | [`/v1/accounts/resolve`](/api-reference/resolve-name-or-domain-to-an-account-id) | Turn an exact name or domain into an account id |
+| `GET` | [`/v1/accounts/{id}/state`](/api-reference/one-customer-diagnosis) | One account: diagnosis, summary, outcomes, use cases, people, timeline, and usage |
+| `PATCH` | [`/v1/accounts/{id}`](/api-reference/set-lifecycle-or-customer-date) | Set lifecycle, `customer_since`, or both |
 
-## Request Format
+The account id in these paths is the BuiltBlock id. It is not a HubSpot id. Resolve a name or domain first when you do not have the id yet.
 
-Send all requests with a `Content-Type: application/json` header and a JSON body where applicable. The API accepts `GET`, `POST`, `PATCH`, and `DELETE` methods depending on the resource.
+People in the account payload do not include email addresses.
 
-<CodeGroup>
+A HubSpot lifecycle, or a won deal, still decides the relationship. `PATCH` reports `lifecycle_applied: false` when that existing fact was kept.
 
-```bash cURL
-curl --request GET \
-  --url https://api.builtblock.com/v1/projects \
-  --header "Authorization: Bearer YOUR_API_KEY" \
-  --header "Content-Type: application/json"
-```
-
-```json Example POST body
-{
-  "name": "My Workflow",
-  "description": "Automates daily data sync",
-  "enabled": true
-}
-```
-
-</CodeGroup>
-
-## Response Format
-
-Every response body is JSON. Successful responses return the requested resource or a list of resources directly at the top level. The HTTP status code indicates the outcome — `2xx` for success, `4xx` for client errors, and `5xx` for server errors.
-
-```json Example response
-{
-  "id": "proj_01hx9k2m4nqr5t6v",
-  "name": "My Workflow",
-  "description": "Automates daily data sync",
-  "enabled": true,
-  "created_at": "2024-06-01T12:00:00Z"
-}
-```
-
-## Versioning
-
-The current stable API version is **v1**. The version is always specified as part of the URL path (e.g., `/v1/projects`). Built Block does not use request headers for versioning.
-
-<Note>
-  Breaking changes are only introduced in new major versions. Additive changes — such as new optional fields or new endpoints — may be added to the current version without notice.
-</Note>
-
-## Pagination
-
-List endpoints return paginated results using **cursor-based pagination**. Pass `limit` and `cursor` as query parameters to control the page size and position.
-
-| Parameter | Type    | Description                                              |
-|-----------|---------|----------------------------------------------------------|
-| `limit`   | integer | Number of results to return. Defaults to `20`, max `100`. |
-| `cursor`  | string  | Opaque cursor from the previous response's `next_cursor`. |
-
-Each list response includes pagination metadata:
-
-```json Paginated list response
-{
-  "data": [
-    { "id": "proj_01hx9k2m4nqr5t6v", "name": "My Workflow" },
-    { "id": "proj_02jy0l3n5ors6u7w", "name": "Backup Sync" }
-  ],
-  "next_cursor": "cur_eyJpZCI6InByb2pfMDJqeTBsM241b3JzNnU3dyJ9",
-  "has_more": true
-}
-```
-
-To fetch the next page, pass the `next_cursor` value as the `cursor` query parameter in your next request. When `has_more` is `false`, you have reached the last page.
-
-```bash Fetching the next page
-curl --request GET \
-  --url "https://api.builtblock.com/v1/projects?limit=20&cursor=cur_eyJpZCI6InByb2pfMDJqeTBsM241b3JzNnU3dyJ9" \
-  --header "Authorization: Bearer YOUR_API_KEY"
-```
-
-## Rate Limiting
-
-The API enforces a limit of **1,000 requests per minute** per API key. If you exceed this limit, the API returns a `429 Too Many Requests` response. See the [Errors](/api-reference/errors) page for guidance on retrying requests with exponential backoff.
-
-<Tip>
-  The response headers `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` tell you your current usage and when the window resets.
-</Tip>
-
-## Next Steps
-
-<CardGroup cols={2}>
-  <Card title="Authentication" icon="key" href="/api-reference/authentication">
-    Learn how to generate API keys and authenticate your requests using the `Authorization` header.
-  </Card>
-  <Card title="Errors" icon="circle-exclamation" href="/api-reference/errors">
-    Understand API error codes, response structure, and how to handle and retry failed requests.
-  </Card>
-</CardGroup>
+<Card title="Create an API key" icon="key" href="/api-reference/authentication">
+  Keys are minted on the API page. Send one as a bearer token.
+</Card>

@@ -1,0 +1,36 @@
+---
+title: "Granola"
+sidebarTitle: "Granola"
+description: "Connect Granola with an API key, then sync notes and transcripts onto companies you already added."
+---
+
+Granola adds meeting notes and transcripts to accounts that already exist. Connecting it does not create your customer list.
+
+Only an organization admin can connect Granola or start a sync.
+
+## Connect
+
+<Steps>
+  <Step title="Open Granola">
+    Go to **Settings**, then **Sources**, and open **Granola**.
+  </Step>
+  <Step title="Enter the API key">
+    Paste the Granola **API key**.
+  </Step>
+  <Step title="Choose personal emails">
+    Leave **Allow personal emails to create accounts** off unless you want a person who uses a personal address, and who is the only customer on a note, to become an account.
+
+    Personal addresses include Gmail, Outlook, Yahoo, and similar inboxes. Turning this on does not change accounts you already added.
+  </Step>
+  <Step title="Connect and sync">
+    Connect Granola. BuiltBlock starts a sync. You can also select **Sync now** later, or **Sync again** after the first run.
+
+    The dialog says transcripts and meetings from the last 24 months are synced and linked to accounts. A sync can take a few minutes.
+  </Step>
+</Steps>
+
+Notes that do not match an account stay unmatched until an account exists. A note with two or more outside companies is not attached.
+
+<Note>
+  Add the company from [HubSpot](/sources/hubspot) first if you want Granola notes to land on it. An admin can also send unmatched Granola notes through [`intake`](/mcp/intake).
+</Note>

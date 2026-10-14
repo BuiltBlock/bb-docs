@@ -1,0 +1,44 @@
+---
+title: "ask"
+sidebarTitle: "ask"
+description: "Ask a question about your customers. Pass the returned session on follow-up questions."
+---
+
+`ask` is the tool for almost every question about your accounts. It is the same path as **New chat** in the app. Anyone who can sign in to BuiltBlock can call it.
+
+Use `ask` for one company, a comparison, the diagnosed book, usage, and the notes and calls behind an answer. If the model does not have a fact, the answer should say so. Call `ask` again instead of guessing.
+
+## Inputs
+
+<ParamField body="question" type="string" required>
+  The question, in everyday language. Maximum 30,000 characters.
+</ParamField>
+
+<ParamField body="timezone" type="string">
+  An IANA timezone, such as `America/New_York`. Omit it to use UTC.
+</ParamField>
+
+<ParamField body="session" type="string">
+  The session from an earlier `ask` in this investigation. Omit it to start a new one.
+</ParamField>
+
+## Follow-ups
+
+`ask` returns an `answer` and a `session`. Pass that same `session` when the next question depends on the last answer, such as "make a table of those numbers" or "who were the 11".
+
+Omit `session` for a new, independent question. Do not invent names or counts that were not in the last answer.
+
+## Result
+
+```json
+{
+  "answer": "Three accounts mentioned a security review in the last call.",
+  "session": "session-id-from-ask"
+}
+```
+
+The result can also include `turn_id` and `trace_id`. You only need `session` for the next question.
+
+<Warning>
+  An invalid timezone or an invalid session returns `invalid_action` and a list of errors. Start a new question by omitting `session`.
+</Warning>

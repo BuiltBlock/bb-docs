@@ -1,0 +1,2402 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "BuiltBlock Account API",
+    "version": "1.0.0",
+    "description": "Read one customer, the customer book, or resolve a name or domain to an account id. Push one item, or set lifecycle and customer_since. Use an API key from the API page in BuiltBlock."
+  },
+  "servers": [
+    {
+      "url": "https://api.builtblock.com"
+    }
+  ],
+  "security": [
+    {
+      "apiKey": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API key from the API page in BuiltBlock. Send it as Authorization: Bearer, or as x-api-key."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": [
+          "error",
+          "code"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "unauthorized",
+              "no_tenant_map",
+              "not_found",
+              "account_not_found",
+              "ambiguous",
+              "bad_query",
+              "invalid_relationship",
+              "rate_limited",
+              "internal_error"
+            ]
+          }
+        }
+      },
+      "UsagePeriodSlice": {
+        "type": "object",
+        "properties": {
+          "current": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "prior": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Same length immediately before"
+          },
+          "change": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "current minus prior"
+          },
+          "change_rate": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "UsageMetricWindows": {
+        "type": "object",
+        "properties": {
+          "7d": {
+            "type": "object",
+            "properties": {
+              "current": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "prior": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Same length immediately before"
+              },
+              "change": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "current minus prior"
+              },
+              "change_rate": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          },
+          "30d": {
+            "type": "object",
+            "properties": {
+              "current": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "prior": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Same length immediately before"
+              },
+              "change": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "current minus prior"
+              },
+              "change_rate": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          },
+          "90d": {
+            "type": "object",
+            "properties": {
+              "current": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "prior": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Same length immediately before"
+              },
+              "change": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "current minus prior"
+              },
+              "change_rate": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          },
+          "180d": {
+            "type": "object",
+            "properties": {
+              "current": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "prior": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Same length immediately before"
+              },
+              "change": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "current minus prior"
+              },
+              "change_rate": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "Usage": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "description": "Full weekly windows for each usage metric in your catalog. Null when no observations exist. Keys are metric ids from your catalog, not a fixed product list.",
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "7d": {
+              "type": "object",
+              "properties": {
+                "current": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "prior": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Same length immediately before"
+                },
+                "change": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "current minus prior"
+                },
+                "change_rate": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "30d": {
+              "type": "object",
+              "properties": {
+                "current": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "prior": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Same length immediately before"
+                },
+                "change": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "current minus prior"
+                },
+                "change_rate": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "90d": {
+              "type": "object",
+              "properties": {
+                "current": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "prior": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Same length immediately before"
+                },
+                "change": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "current minus prior"
+                },
+                "change_rate": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "180d": {
+              "type": "object",
+              "properties": {
+                "current": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "prior": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Same length immediately before"
+                },
+                "change": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "current minus prior"
+                },
+                "change_rate": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "UsageMetricDef": {
+        "type": "object",
+        "required": [
+          "label",
+          "unit",
+          "description"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Explanation of this metric for this organization."
+          }
+        }
+      },
+      "UsageCatalog": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "description": "Tenant metric definitions. Descriptions are what summaries and risk read.",
+        "additionalProperties": {
+          "type": "object",
+          "required": [
+            "label",
+            "unit",
+            "description"
+          ],
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "unit": {
+              "type": "string"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Explanation of this metric for this organization."
+            }
+          }
+        }
+      },
+      "UsageHeadline": {
+        "type": "object",
+        "required": [
+          "current",
+          "change"
+        ],
+        "properties": {
+          "current": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "change": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "BookRowUsage": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "description": "30-day current value and change for each usage metric in your catalog. Full windows stay on GET /v1/accounts/{id}/state.",
+        "additionalProperties": {
+          "type": "object",
+          "required": [
+            "current",
+            "change"
+          ],
+          "properties": {
+            "current": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "change": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        }
+      },
+      "BookUsageMetric": {
+        "type": "object",
+        "required": [
+          "label",
+          "unit",
+          "description",
+          "current",
+          "change"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "current": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Sum of 30d current across the book"
+          },
+          "change": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Sum of 30d change across the book"
+          }
+        }
+      },
+      "BookUsage": {
+        "type": "object",
+        "required": [
+          "period",
+          "change",
+          "metrics"
+        ],
+        "description": "30-day usage rollup. Change groups each account by its net 30-day change. Metric keys come from your usage catalog.",
+        "properties": {
+          "period": {
+            "type": "string",
+            "enum": [
+              "30d"
+            ]
+          },
+          "change": {
+            "type": "object",
+            "required": [
+              "up",
+              "flat",
+              "down",
+              "unknown"
+            ],
+            "properties": {
+              "up": {
+                "type": "integer"
+              },
+              "flat": {
+                "type": "integer"
+              },
+              "down": {
+                "type": "integer"
+              },
+              "unknown": {
+                "type": "integer"
+              }
+            }
+          },
+          "metrics": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": [
+                "label",
+                "unit",
+                "description",
+                "current",
+                "change"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "current": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Sum of 30d current across the book"
+                },
+                "change": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Sum of 30d change across the book"
+                }
+              }
+            }
+          }
+        }
+      },
+      "TimelineItem": {
+        "type": "object",
+        "required": [
+          "at",
+          "era",
+          "kind",
+          "people"
+        ],
+        "properties": {
+          "at": {
+            "type": "string"
+          },
+          "era": {
+            "type": "string",
+            "enum": [
+              "before_eval",
+              "evaluation",
+              "customer"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "people": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TimelineBeat": {
+        "type": "object",
+        "required": [
+          "at",
+          "era",
+          "kind",
+          "people",
+          "items"
+        ],
+        "properties": {
+          "at": {
+            "type": "string"
+          },
+          "era": {
+            "type": "string",
+            "enum": [
+              "before_eval",
+              "evaluation",
+              "customer"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "people": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "at",
+                "era",
+                "kind",
+                "people"
+              ],
+              "properties": {
+                "at": {
+                  "type": "string"
+                },
+                "era": {
+                  "type": "string",
+                  "enum": [
+                    "before_eval",
+                    "evaluation",
+                    "customer"
+                  ]
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "summary": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "text": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "people": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "CustomerAccount": {
+        "type": "object",
+        "required": [
+          "account",
+          "log",
+          "diagnosis",
+          "summary",
+          "outcomes",
+          "use_cases",
+          "people",
+          "timeline",
+          "usage",
+          "usage_catalog",
+          "firmographics"
+        ],
+        "properties": {
+          "account": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "domain",
+              "relationship",
+              "arr",
+              "renewal_date"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Account UUID"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "relationship": {
+                "type": "string",
+                "enum": [
+                  "prospect",
+                  "customer",
+                  "former",
+                  "unknown"
+                ]
+              },
+              "arr": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "CRM deal number"
+              },
+              "renewal_date": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "log": {
+            "type": "object",
+            "description": "ISO dates compiled in code",
+            "required": [
+              "became_account",
+              "started_evaluating",
+              "purchased",
+              "became_customer"
+            ],
+            "properties": {
+              "became_account": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "started_evaluating": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "purchased": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "became_customer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "diagnosis": {
+            "type": "object",
+            "required": [
+              "stage",
+              "risk",
+              "coverage",
+              "enough_tape",
+              "as_of"
+            ],
+            "properties": {
+              "stage": {
+                "type": "object",
+                "required": [
+                  "value",
+                  "why",
+                  "confidence"
+                ],
+                "properties": {
+                  "value": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "onboard",
+                      "maintenance",
+                      "expand",
+                      null
+                    ]
+                  },
+                  "why": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "confidence": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high",
+                      null
+                    ],
+                    "description": "Confidence: low, medium, or high."
+                  }
+                }
+              },
+              "risk": {
+                "type": "object",
+                "required": [
+                  "level",
+                  "why",
+                  "confidence",
+                  "evidence"
+                ],
+                "properties": {
+                  "level": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high",
+                      "unknown",
+                      null
+                    ]
+                  },
+                  "why": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "confidence": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high",
+                      null
+                    ],
+                    "description": "Confidence: low, medium, or high."
+                  },
+                  "evidence": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "at",
+                        "era",
+                        "kind",
+                        "people",
+                        "items"
+                      ],
+                      "properties": {
+                        "at": {
+                          "type": "string"
+                        },
+                        "era": {
+                          "type": "string",
+                          "enum": [
+                            "before_eval",
+                            "evaluation",
+                            "customer"
+                          ]
+                        },
+                        "kind": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "summary": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "text": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "people": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "at",
+                              "era",
+                              "kind",
+                              "people"
+                            ],
+                            "properties": {
+                              "at": {
+                                "type": "string"
+                              },
+                              "era": {
+                                "type": "string",
+                                "enum": [
+                                  "before_eval",
+                                  "evaluation",
+                                  "customer"
+                                ]
+                              },
+                              "kind": {
+                                "type": "string"
+                              },
+                              "title": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "summary": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "text": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "people": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "coverage": {
+                "type": "string",
+                "enum": [
+                  "early",
+                  "thin",
+                  "current",
+                  "skipped_not_customer",
+                  "error"
+                ]
+              },
+              "enough_tape": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "as_of": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "summary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "outcomes": {
+            "type": "array",
+            "description": "Standing outcomes on this account. Sibling of use_cases. A use case is not nested here.",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "result",
+                "realization"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Outcome UUID"
+                },
+                "result": {
+                  "type": "string"
+                },
+                "realization": {
+                  "type": "string",
+                  "enum": [
+                    "realized",
+                    "partial",
+                    "stalled",
+                    "contradicted",
+                    "unknown"
+                  ]
+                }
+              }
+            }
+          },
+          "use_cases": {
+            "type": "array",
+            "description": "Standing jobs on this account. Sibling of outcomes. outcome_id is set only when this job supports an outcome on the same account.",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "scenario",
+                "outcome_id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Use case UUID"
+                },
+                "scenario": {
+                  "type": "string"
+                },
+                "outcome_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Outcome id on this account, or null when this job has no parent"
+                }
+              }
+            }
+          },
+          "people": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "role",
+                "connection",
+                "sentiment"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "role": {
+                  "type": "string"
+                },
+                "connection": {
+                  "type": "string",
+                  "enum": [
+                    "high",
+                    "light",
+                    "silent",
+                    "unknown"
+                  ]
+                },
+                "sentiment": {
+                  "type": "string",
+                  "enum": [
+                    "happy",
+                    "unhappy",
+                    "mixed",
+                    "unknown"
+                  ]
+                },
+                "connection_why": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "sentiment_why": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "last_seen": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "summary": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "timeline": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "at",
+                "era",
+                "kind",
+                "people",
+                "items"
+              ],
+              "properties": {
+                "at": {
+                  "type": "string"
+                },
+                "era": {
+                  "type": "string",
+                  "enum": [
+                    "before_eval",
+                    "evaluation",
+                    "customer"
+                  ]
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "summary": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "text": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "people": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "at",
+                      "era",
+                      "kind",
+                      "people"
+                    ],
+                    "properties": {
+                      "at": {
+                        "type": "string"
+                      },
+                      "era": {
+                        "type": "string",
+                        "enum": [
+                          "before_eval",
+                          "evaluation",
+                          "customer"
+                        ]
+                      },
+                      "kind": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "summary": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "text": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "people": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "usage": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Full weekly windows for each usage metric in your catalog. Null when no observations exist. Keys are metric ids from your catalog, not a fixed product list.",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "7d": {
+                  "type": "object",
+                  "properties": {
+                    "current": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "prior": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "description": "Same length immediately before"
+                    },
+                    "change": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "description": "current minus prior"
+                    },
+                    "change_rate": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  }
+                },
+                "30d": {
+                  "type": "object",
+                  "properties": {
+                    "current": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "prior": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "description": "Same length immediately before"
+                    },
+                    "change": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "description": "current minus prior"
+                    },
+                    "change_rate": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  }
+                },
+                "90d": {
+                  "type": "object",
+                  "properties": {
+                    "current": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "prior": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "description": "Same length immediately before"
+                    },
+                    "change": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "description": "current minus prior"
+                    },
+                    "change_rate": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  }
+                },
+                "180d": {
+                  "type": "object",
+                  "properties": {
+                    "current": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "prior": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "description": "Same length immediately before"
+                    },
+                    "change": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "description": "current minus prior"
+                    },
+                    "change_rate": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "usage_catalog": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Tenant metric definitions. Descriptions are what summaries and risk read.",
+            "additionalProperties": {
+              "type": "object",
+              "required": [
+                "label",
+                "unit",
+                "description"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Explanation of this metric for this organization."
+                }
+              }
+            }
+          },
+          "firmographics": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Create-time company snapshot. Null when no profile row exists. ARR on account stays the CRM deal number.",
+            "required": [
+              "status",
+              "sector",
+              "industry",
+              "segment",
+              "employee_range",
+              "headquarters",
+              "what_they_sell",
+              "customer_type"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "done",
+                  "error"
+                ]
+              },
+              "sector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "industry": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "segment": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "smb",
+                  "mid_market",
+                  "enterprise",
+                  null
+                ]
+              },
+              "employee_range": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "headquarters": {
+                "type": "object",
+                "required": [
+                  "city",
+                  "region",
+                  "country"
+                ],
+                "properties": {
+                  "city": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "region": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "country": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "what_they_sell": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "customer_type": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "b2b",
+                  "b2c",
+                  "b2b2c",
+                  null
+                ]
+              }
+            }
+          }
+        }
+      },
+      "PortfolioAccount": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "domain",
+          "relationship",
+          "stage",
+          "risk",
+          "coverage",
+          "as_of",
+          "usage"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "domain": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "relationship": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stage": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "onboard",
+              "maintenance",
+              "expand",
+              null
+            ]
+          },
+          "risk": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "unknown",
+              null
+            ]
+          },
+          "coverage": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "early",
+              "thin",
+              "current",
+              null
+            ]
+          },
+          "as_of": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "usage": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "30-day current value and change for each usage metric in your catalog. Full windows stay on GET /v1/accounts/{id}/state.",
+            "additionalProperties": {
+              "type": "object",
+              "required": [
+                "current",
+                "change"
+              ],
+              "properties": {
+                "current": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "change": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "PortfolioBook": {
+        "type": "object",
+        "required": [
+          "as_of",
+          "filter",
+          "truncated",
+          "book",
+          "stage",
+          "risk",
+          "coverage",
+          "usage",
+          "accounts"
+        ],
+        "properties": {
+          "as_of": {
+            "type": "string"
+          },
+          "filter": {
+            "type": "object",
+            "required": [
+              "relationship"
+            ],
+            "properties": {
+              "relationship": {
+                "type": "string",
+                "enum": [
+                  "prospect",
+                  "customer",
+                  "former",
+                  "unknown"
+                ]
+              }
+            }
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True when the row list is capped at 500"
+          },
+          "book": {
+            "type": "object",
+            "required": [
+              "accounts",
+              "diagnosed",
+              "pending"
+            ],
+            "properties": {
+              "accounts": {
+                "type": "integer"
+              },
+              "diagnosed": {
+                "type": "integer"
+              },
+              "pending": {
+                "type": "integer"
+              }
+            }
+          },
+          "stage": {
+            "type": "object",
+            "required": [
+              "onboard",
+              "maintenance",
+              "expand",
+              "unknown"
+            ],
+            "properties": {
+              "onboard": {
+                "type": "integer"
+              },
+              "maintenance": {
+                "type": "integer"
+              },
+              "expand": {
+                "type": "integer"
+              },
+              "unknown": {
+                "type": "integer"
+              }
+            }
+          },
+          "risk": {
+            "type": "object",
+            "required": [
+              "low",
+              "medium",
+              "high",
+              "unknown"
+            ],
+            "properties": {
+              "low": {
+                "type": "integer"
+              },
+              "medium": {
+                "type": "integer"
+              },
+              "high": {
+                "type": "integer"
+              },
+              "unknown": {
+                "type": "integer"
+              }
+            }
+          },
+          "coverage": {
+            "type": "object",
+            "required": [
+              "current",
+              "thin",
+              "early",
+              "unknown"
+            ],
+            "properties": {
+              "current": {
+                "type": "integer"
+              },
+              "thin": {
+                "type": "integer"
+              },
+              "early": {
+                "type": "integer"
+              },
+              "unknown": {
+                "type": "integer"
+              }
+            }
+          },
+          "usage": {
+            "type": "object",
+            "required": [
+              "period",
+              "change",
+              "metrics"
+            ],
+            "description": "30-day usage rollup. Change groups each account by its net 30-day change. Metric keys come from your usage catalog.",
+            "properties": {
+              "period": {
+                "type": "string",
+                "enum": [
+                  "30d"
+                ]
+              },
+              "change": {
+                "type": "object",
+                "required": [
+                  "up",
+                  "flat",
+                  "down",
+                  "unknown"
+                ],
+                "properties": {
+                  "up": {
+                    "type": "integer"
+                  },
+                  "flat": {
+                    "type": "integer"
+                  },
+                  "down": {
+                    "type": "integer"
+                  },
+                  "unknown": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "metrics": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "required": [
+                    "label",
+                    "unit",
+                    "description",
+                    "current",
+                    "change"
+                  ],
+                  "properties": {
+                    "label": {
+                      "type": "string"
+                    },
+                    "unit": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "current": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "description": "Sum of 30d current across the book"
+                    },
+                    "change": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "description": "Sum of 30d change across the book"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "domain",
+                "relationship",
+                "stage",
+                "risk",
+                "coverage",
+                "as_of",
+                "usage"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "domain": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "relationship": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "stage": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "enum": [
+                    "onboard",
+                    "maintenance",
+                    "expand",
+                    null
+                  ]
+                },
+                "risk": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high",
+                    "unknown",
+                    null
+                  ]
+                },
+                "coverage": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "enum": [
+                    "early",
+                    "thin",
+                    "current",
+                    null
+                  ]
+                },
+                "as_of": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "usage": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "description": "30-day current value and change for each usage metric in your catalog. Full windows stay on GET /v1/accounts/{id}/state.",
+                  "additionalProperties": {
+                    "type": "object",
+                    "required": [
+                      "current",
+                      "change"
+                    ],
+                    "properties": {
+                      "current": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "change": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Resolve": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "BuiltBlock account UUID"
+          }
+        }
+      },
+      "PartnerWrite": {
+        "type": "object",
+        "required": [
+          "item"
+        ],
+        "properties": {
+          "account": {
+            "type": "object",
+            "description": "Optional. Name or domain creates or attaches. Id attaches to an existing account.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "lifecycle": {
+                "type": "string",
+                "enum": [
+                  "customer",
+                  "prospect",
+                  "former",
+                  "unknown"
+                ]
+              },
+              "customer_since": {
+                "type": "string",
+                "description": "ISO date the account became a customer. A date-only value is UTC midnight."
+              }
+            }
+          },
+          "person": {
+            "type": "object",
+            "description": "Optional. Email, LinkedIn, or name is enough. A work email can place the account.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "linkedin": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            }
+          },
+          "item": {
+            "type": "object",
+            "required": [
+              "kind",
+              "body",
+              "source_id"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "outreach",
+                  "note",
+                  "email",
+                  "call",
+                  "meeting",
+                  "unknown"
+                ],
+                "description": "What this object is. unknown lets BuiltBlock decide."
+              },
+              "description": {
+                "type": "string",
+                "description": "What this object is, in your own words."
+              },
+              "occurred_at": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string",
+                "description": "The payload. BuiltBlock parses it."
+              },
+              "source_id": {
+                "type": "string",
+                "maxLength": 64,
+                "description": "A custom id you invent to identify this object in your system. The same id retries the same write."
+              }
+            }
+          }
+        }
+      },
+      "PartnerWriteResult": {
+        "type": "object",
+        "required": [
+          "id",
+          "created",
+          "item"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "BuiltBlock account UUID"
+          },
+          "created": {
+            "type": "boolean"
+          },
+          "item": {
+            "type": "object",
+            "required": [
+              "id",
+              "kind",
+              "source_id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "outreach",
+                  "note",
+                  "email",
+                  "call",
+                  "meeting",
+                  "unknown"
+                ]
+              },
+              "source_id": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "PartnerAccountUpdate": {
+        "type": "object",
+        "description": "Set lifecycle, customer_since, or both. A HubSpot lifecycle or a won deal still decides the book.",
+        "properties": {
+          "lifecycle": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "prospect",
+              "former",
+              "unknown"
+            ]
+          },
+          "customer_since": {
+            "type": "string"
+          }
+        }
+      },
+      "PartnerAccountUpdateResult": {
+        "type": "object",
+        "required": [
+          "id",
+          "relationship",
+          "customer_since",
+          "lifecycle_applied"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "relationship": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "prospect",
+              "former",
+              "unknown"
+            ],
+            "description": "The relationship the book will use after this write."
+          },
+          "customer_since": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lifecycle_applied": {
+            "type": "boolean",
+            "description": "False when a HubSpot lifecycle or a won deal kept the existing lifecycle."
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v1/accounts": {
+      "post": {
+        "summary": "Push account data",
+        "description": "Create or attach a company and optional person, then enqueue the item on ingest. Account and person are each optional. source_id is a custom id you invent.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartnerWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accepted and enqueued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerWriteResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Need an account or a person, or the item is invalid"
+          },
+          "401": {
+            "description": "Missing or invalid key"
+          },
+          "404": {
+            "description": "Unknown account id"
+          },
+          "409": {
+            "description": "More than one account matched"
+          },
+          "429": {
+            "description": "Rate limited"
+          }
+        }
+      },
+      "get": {
+        "summary": "Executive customer book",
+        "description": "Full-book counts plus up to 500 short customer rows. usage is a 30-day rollup (change buckets plus catalog metric totals). Each row carries 30d current and change only. Full windows stay on GET /v1/accounts/{id}/state.",
+        "parameters": [
+          {
+            "name": "relationship",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "prospect",
+                "customer",
+                "former",
+                "unknown"
+              ]
+            },
+            "description": "Defaults to customer."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Portfolio",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioBook"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "invalid_relationship"
+          },
+          "401": {
+            "description": "Missing or invalid key"
+          },
+          "403": {
+            "description": "Key org is not mapped"
+          },
+          "429": {
+            "description": "Rate limited"
+          }
+        }
+      }
+    },
+    "/v1/accounts/{id}": {
+      "patch": {
+        "summary": "Set lifecycle or customer date",
+        "description": "Mark an existing account customer, prospect, former, or unknown, and record when they became a customer. Enqueues diagnosis. A HubSpot lifecycle or a won deal still wins.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartnerAccountUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Facts stored. relationship is what the book will use.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerAccountUpdateResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Need a lifecycle or a customer_since"
+          },
+          "401": {
+            "description": "Missing or invalid key"
+          },
+          "404": {
+            "description": "Unknown account id"
+          },
+          "429": {
+            "description": "Rate limited"
+          }
+        }
+      }
+    },
+    "/v1/accounts/resolve": {
+      "get": {
+        "summary": "Resolve name or domain to an account id",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ id }",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Resolve"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Need exactly one of name or domain"
+          },
+          "404": {
+            "description": "No match"
+          },
+          "409": {
+            "description": "More than one match"
+          }
+        }
+      }
+    },
+    "/v1/accounts/{id}/state": {
+      "get": {
+        "summary": "One customer diagnosis",
+        "description": "Full customer projection: account, log, diagnosis, summary, outcomes, use cases, people, timeline, and usage windows when they exist.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consumer account payload including usage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerAccount"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown id"
+          }
+        }
+      }
+    }
+  }
+}
